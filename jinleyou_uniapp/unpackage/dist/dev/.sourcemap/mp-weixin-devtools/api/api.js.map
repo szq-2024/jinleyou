@@ -1,0 +1,1 @@
+{"version":3,"names":["getBanner","api_http","enhancedHttp","get"],"sources":["api.js"],"sourcesContent":["import http from './http.js'\n\n// 首页Banner接口\nexport const getBanner = () => {\n\treturn http.get('/banner') // 明确使用GET方法\n}"],"mappings":";;;;AAGY,IAACA,SAAA,GAAY,SAAZA,UAAA,EAAkB;EAC9B,OAAOC,QAAA,CAAIC,YAAA,CAACC,GAAA,CAAI,SAAS;AAC1B","ignoreList":[]}

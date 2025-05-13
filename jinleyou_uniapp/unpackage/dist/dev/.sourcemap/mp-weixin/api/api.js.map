@@ -1,0 +1,1 @@
+{"version":3,"file":"api.js","sources":["api/api.js"],"sourcesContent":["import { http } from './http.js'\n\n// 首页Banner接口\nexport const getBanner = () => {\n\treturn http.get('/banner') // 明确使用GET方法\n}"],"names":["http"],"mappings":";;AAGY,MAAC,YAAY,MAAM;AAC9B,SAAOA,SAAI,KAAC,IAAI,SAAS;AAC1B;;"}

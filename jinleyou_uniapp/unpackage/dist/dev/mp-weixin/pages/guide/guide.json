@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "应急导航",
+  "usingComponents": {
+    "uni-nav-bar": "../../node-modules/@dcloudio/uni-ui/lib/uni-nav-bar/uni-nav-bar",
+    "uni-icons": "../../node-modules/@dcloudio/uni-ui/lib/uni-icons/uni-icons",
+    "uni-drawer": "../../node-modules/@dcloudio/uni-ui/lib/uni-drawer/uni-drawer"
+  }
+}

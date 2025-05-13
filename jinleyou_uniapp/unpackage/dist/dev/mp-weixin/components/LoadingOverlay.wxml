@@ -1,0 +1,1 @@
+<view wx:if="{{a}}" class="{{['loading-overlay', 'data-v-9b455262', virtualHostClass]}}" style="{{virtualHostStyle}}" hidden="{{virtualHostHidden || false}}" id="{{b}}"><view class="loading-content data-v-9b455262"><view class="loading-spinner data-v-9b455262"></view><text class="loading-text data-v-9b455262">加载中...</text></view></view>

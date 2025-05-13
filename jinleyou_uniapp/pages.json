@@ -1,0 +1,146 @@
+{
+	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+		
+		{
+		    "path": "pages/login/login",
+		    "style": { "navigationBarTitleText": "登录" }
+		},
+		{
+		    "path": "pages/register/index",
+		    "style": { "navigationBarTitleText": "注册" }
+		},
+		{
+		    "path": "pages/forgot-password/index",
+		    "style": { "navigationBarTitleText": "忘记密码" }
+		},
+		{
+			"path": "pages/index/index",
+			"style": {
+				"navigationBarTitleText": "津乐游"
+			}
+		},
+		{
+			"path" : "pages/partner/index",
+			"style" : 
+			{
+				"navigationBarTitleText" : "行程列表"
+			}
+		},
+		{
+			"path" : "pages/partner/create-plans",
+			"style" : 
+			{
+				"navigationBarTitleText" : "发布旅行计划"
+			}
+		},
+		{
+			"path" : "pages/partner/create-guides",
+			"style" : 
+			{
+				"navigationBarTitleText" : "发布导游服务"
+			}
+		},
+		{
+			"path" : "pages/chat/chat",
+			"style" : 
+			{
+				"navigationBarTitleText" : "聊天"
+			}
+		},
+		{
+			"path" : "pages/guide/guide",
+			"style" : 
+			{
+				"navigationBarTitleText" : "应急导航"
+			}
+		},
+		{
+			"path": "pages/my/my",
+			"style": {
+				"navigationBarTitleText": "个人中心"
+			}
+		},
+		{
+			"path" : "pages/scenic/scenic",
+			"style" : 
+			{
+				"navigationBarTitleText" : "景点详情"
+			}
+		},
+		{
+		    "path": "pages/my/my_messages",
+		    "style": { "navigationBarTitleText": "我的消息" }
+		},
+		{
+		    "path": "pages/my/my_comments",
+		    "style": { "navigationBarTitleText": "我的评论" }
+		},
+		{
+		    "path": "pages/my/my_trips",
+		    "style": { "navigationBarTitleText": "我的行程" }
+		},
+		{
+		    "path": "pages/my/my_services",
+		    "style": { "navigationBarTitleText": "我的服务" }
+		},
+		{
+		    "path": "pages/my/setting",
+		    "style": { "navigationBarTitleText": "设置" }
+		},
+		{
+		    "path": "pages/my/edit_profile",
+		    "style": { "navigationBarTitleText": "修改个人资料" }
+		}
+		
+		
+	],
+	"tabBar": {
+		"color": "#7A7E83",
+		"selectedColor": "#2867CE",
+		"borderStyle": "black",
+		"backgroundColor": "#ffffff",
+		"list": [
+			{
+				"pagePath": "pages/index/index",
+				"iconPath": "static/tabBar/home01.png",
+				"selectedIconPath": "static/tabBar/home.png",
+				"text": "景点"
+			},
+			{
+				"pagePath": "pages/partner/index",
+				"iconPath": "static/tabBar/partner01.png",
+				"selectedIconPath": "static/tabBar/partner.png",
+				"text": "找同伴"
+			},
+			{
+				"pagePath": "pages/guide/guide",
+				"iconPath": "static/tabBar/guide01.png",
+				"selectedIconPath": "static/tabBar/guide.png",
+				"text": "应急导航"
+			},
+			{
+				"pagePath": "pages/my/my",
+				"iconPath": "static/tabBar/my01.png",
+				"selectedIconPath": "static/tabBar/my.png",
+				"text": "个人中心"
+			}
+		]
+	},
+	"easycom": {
+		"autoscan": true,
+		// 注意一定要放在custom里，否则无效，https://ask.dcloud.net.cn/question/131175
+		"custom": {
+			"^u--(.*)": "@/uni_modules/uview-plus/components/u-$1/u-$1.vue",
+			"^up-(.*)": "@/uni_modules/uview-plus/components/u-$1/u-$1.vue",
+		    "^u-([^-].*)": "@/uni_modules/uview-plus/components/u-$1/u-$1.vue",
+			"^uni-(.*)": "@dcloudio/uni-ui/lib/uni-$1/uni-$1.vue"
+		}
+	},
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "uni-app",
+		"navigationBarBackgroundColor": "#F8F8F8",
+		"backgroundColor": "#F8F8F8"
+	},
+	"uniIdRouter": {}
+}

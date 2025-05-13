@@ -1,0 +1,1 @@
+<view ref="ani" animation="{{b}}" class="{{[c, virtualHostClass]}}" style="{{d + ';' + virtualHostStyle}}" bindtap="{{e}}" hidden="{{virtualHostHidden !== '' ? virtualHostHidden || false : !a}}" id="{{f}}"><slot></slot></view>

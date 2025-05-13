@@ -1,0 +1,10 @@
+{
+  "navigationBarTitleText": "景点详情",
+  "usingComponents": {
+    "uni-nav-bar": "../../node-modules/@dcloudio/uni-ui/lib/uni-nav-bar/uni-nav-bar",
+    "uni-rate": "../../node-modules/@dcloudio/uni-ui/lib/uni-rate/uni-rate",
+    "uni-icons": "../../node-modules/@dcloudio/uni-ui/lib/uni-icons/uni-icons",
+    "uni-file-picker": "../../node-modules/@dcloudio/uni-ui/lib/uni-file-picker/uni-file-picker",
+    "uni-popup": "../../node-modules/@dcloudio/uni-ui/lib/uni-popup/uni-popup"
+  }
+}

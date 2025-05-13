@@ -1,0 +1,1249 @@
+﻿　　　　后端基础代码
+　　　　
+　　　　根据项目需求，以下为基于Express框架的后端核心代码示例：
+　　　　.eslintrc.json
+　　　　{
+　　　　  "extends": "eslint:recommended",
+　　　　  "rules": {
+　　　　    "no-unused-vars": "warn",
+　　　　    "no-console": "off",
+　　　　    "indent": ["error", 2]
+　　　　  },
+　　　　  "env": {
+　　　　    "node": true,
+　　　　    "es6": true
+　　　　  }
+　　　　}
+　　　　
+　　　　.env
+　　NODE_ENV=development
+
+# Database
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=szq123456
+DB_NAME=jinleyou_2
+
+# JWT
+JWT_SECRET=your_jwt_secret_key
+JWT_REFRESH_SECRET=your_jwt_refresh_secret_key
+
+# WeChat
+WECHAT_APPID=wx4e554fd9460ce93a
+WECHAT_SECRET=2a400a5948d2148983d2aa85eb263688
+
+VUE_APP_TENCENT_MAP_KEY=6P6BZ-O46CZ-7C3XU-7CDUI-TXUFT-ASFGC
+　　　　
+　　　　/tests/auth.test.js
+　　　　const request = require('supertest');
+　　　　const app = require('../app');
+　　　　
+　　　　describe('用户注册', () => {
+　　　　  it('应成功注册新用户', async () => {
+　　　　    const res = await request(app)
+　　　　      .post('/api/auth/register')
+　　　　      .send({
+　　　　        phone: '13800138000',
+　　　　        password: 'Test123!',
+　　　　        code: '123456'
+　　　　      });
+　　　　    expect(res.statusCode).toEqual(201);
+　　　　  });
+　　　　});
+　　　　
+　　　　```javascript
+　　　　
+　　　　// config/db.js
+　　　　const mysql = require('mysql2/promise');
+　　　　require('dotenv').config(); // 加载环境变量
+　　　　
+　　　　const pool = mysql.createPool({
+　　　　  host: process.env.DB_HOST || 'localhost',
+　　　　  user: process.env.DB_USER || 'root',
+　　　　  password: process.env.DB_PASSWORD || '',
+　　　　  database: process.env.DB_NAME || 'jinleyou_2',
+　　　　  port: process.env.DB_PORT || 3306, // 补充端口配置
+　　　　  waitForConnections: true,
+　　　　  connectionLimit: 10, // 连接池大小
+　　　　  queueLimit: 0,
+　　　　  charset: 'utf8mb4', // 支持emoji
+　　　　  timezone: '+08:00' // 设置中国时区
+　　　　});
+　　　　
+　　　　// 测试数据库连接
+　　　　(async () => {
+　　　　  try {
+　　　　    const conn = await pool.getConnection();
+　　　　    console.log('Database connected successfully');
+　　　　    conn.release();
+　　　　  } catch (err) {
+　　　　    console.error('Database connection failed:', err.message);
+　　　　  }
+　　　　})();
+　　　　
+　　　　module.exports = pool;
+　　　　```
+　　　　
+　　　　// config/wechat.js
+　　　　require('dotenv').config();
+　　　　
+　　　　module.exports = {
+　　　　  // 微信小程序配置
+　　　　  appid: process.env.WECHAT_APPID,
+　　　　  secret: process.env.WECHAT_SECRET,
+　　　　  
+　　　　  // 微信API地址
+　　　　  api: {
+　　　　    jscode2session: 'https://api.weixin.qq.com/sns/jscode2session',
+　　　　    accessToken: 'https://api.weixin.qq.com/cgi-bin/token'
+　　　　  },
+　　　　
+　　　　  // 微信登录配置
+　　　　  login: {
+　　　　    grantType: 'authorization_code',
+　　　　    timeout: 5000 // 请求超时时间
+　　　　  },
+　　　　  DEFAULT_AVATAR: 'https://example.com/wechat-default-avatar.jpg'
+　　　　};
+　　　　
+　　　　//config/swagger.js
+　　　　const swaggerJsdoc = require('swagger-jsdoc');
+　　　　const swaggerUi = require('swagger-ui-express');
+　　　　
+　　　　const options = {
+　　　　  definition: {
+　　　　    openapi: '3.0.0',
+　　　　    info: {
+　　　　      title: 'Travel App API',
+　　　　      version: '1.0.0',
+　　　　      description: '旅游应用后端接口文档',
+　　　　    },
+　　　　    servers: [
+　　　　      { url: 'http://localhost:3000/api' }
+　　　　    ]
+　　　　  },
+　　　　  apis: ['./routes/*.js']
+　　　　};
+　　　　
+　　　　const specs = swaggerJsdoc(options);
+　　　　
+　　　　module.exports = (app) => {
+　　　　  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
+　　　　};
+　　　　
+　　　　// models/user.js
+　　　　const db = require('../config/db');
+　　　　const validator = require('validator');
+　　　　const wechatConfig = require('../config/wechat');
+　　　　
+　　　　class User {
+　　　　  static async create(user) {
+　　　　    if (user.phone && !validator.isMobilePhone(user.phone, 'zh-CN')) {
+　　　　      throw new Error('手机号格式不正确');
+　　　　    }
+　　　　
+　　　　    const [result] = await db.execute(
+　　　　      'INSERT INTO users (openid, phone, password, nickname, avatar) VALUES (?, ?, ?, ?, ?)',
+　　　　      [
+　　　　        user.openid || null,
+　　　　        user.phone || null,
+　　　　        user.password || null,
+　　　　        user.nickname || `微信用户${Math.floor(Math.random() * 100000)}`,
+　　　　        user.avatar || wechatConfig.DEFAULT_AVATAR
+　　　　      ]
+　　　　    );
+　　　　    return result;
+　　　　  }
+　　　　
+　　　　  static async findById(id) {
+　　　　    const [rows] = await db.execute(
+　　　　      'SELECT * FROM users WHERE id = ? LIMIT 1',
+　　　　      [id]
+　　　　    );
+　　　　    return rows[0];
+　　　　  }
+　　　　
+　　　　  static async findByPhone(phone) {
+　　　　    const [rows] = await db.execute(
+　　　　      'SELECT * FROM users WHERE phone = ? LIMIT 1',
+　　　　      [phone]
+　　　　    );
+　　　　    return rows[0];
+　　　　  }
+　　　　
+　　　　  static async findByOpenid(openid) {
+　　　　    const [rows] = await db.execute(
+　　　　      'SELECT * FROM users WHERE openid = ? LIMIT 1',
+　　　　      [openid]
+　　　　    );
+　　　　    return rows[0];
+　　　　  }
+　　　　
+　　　　  static async update(id, fields) {
+　　　　    const allowedFields = ['nickname', 'avatar', 'phone'];
+　　　　    const validFields = Object.keys(fields).filter(key => allowedFields.includes(key));
+　　　　    const setClause = validFields.map(key => `${key} = ?`).join(', ');
+　　　　    const values = validFields.map(key => fields[key]);
+　　　　    
+　　　　    await db.execute(
+　　　　      `UPDATE users SET ${setClause} WHERE id = ?`,
+　　　　      [...values, id]
+　　　　    );
+　　　　  }
+　　　　
+　　　　  static async delete(id) {
+　　　　    await db.execute(
+　　　　      'DELETE FROM users WHERE id = ?',
+　　　　      [id]
+　　　　    );
+　　　　  }
+　　　　}
+　　　　
+　　　　module.exports = User;
+　　　　
+　　　　// models/scenic.js
+　　　　const db = require('../config/db');
+　　　　
+　　　　class Scenic {
+　　　　  static async create(scenic) {
+　　　　    const [result] = await db.execute(
+　　　　      'INSERT INTO scenics (name, images, intro, detail) VALUES (?, ?, ?, ?)',
+　　　　      [
+　　　　        scenic.name,
+　　　　        JSON.stringify(scenic.images || []),
+　　　　        scenic.intro,
+　　　　        scenic.detail
+　　　　      ]
+　　　　    );
+　　　　    return result.insertId;
+　　　　  }
+　　　　
+　　　　  static async findAll() {
+　　　　    const [rows] = await db.execute('SELECT * FROM scenics');
+　　　　    return rows.map(row => {
+　　　　      try {
+　　　　        return { ...row, images: JSON.parse(row.images) };
+　　　　      } catch (e) {
+　　　　        return { ...row, images: [] };
+　　　　      }
+　　　　    });
+　　　　  }
+　　　　
+　　　　  static async findById(id) {
+　　　　    const [rows] = await db.execute(
+　　　　      'SELECT * FROM scenics WHERE id = ?',
+　　　　      [id]
+　　　　    );
+　　　　    if (rows.length === 0) return null;
+　　　　    return {
+　　　　      ...rows[0],
+　　　　      images: JSON.parse(rows[0].images)
+　　　　    };
+　　　　  }
+　　　　
+　　　　  static async update(id, fields) {
+　　　　    const allowedFields = ['name', 'images', 'intro', 'detail'];
+　　　　    const validFields = Object.keys(fields).filter(key => allowedFields.includes(key));
+　　　　    const setClause = validFields.map(key => `${key} = ?`).join(', ');
+　　　　    const values = validFields.map(key => fields[key]);
+　　　　
+　　　　    await db.execute(
+　　　　      `UPDATE scenics SET ${setClause} WHERE id = ?`,
+　　　　      [...values, id]
+　　　　    );
+　　　　  }
+　　　　
+　　　　  static async delete(id) {
+　　　　    await db.execute(
+　　　　      'DELETE FROM scenics WHERE id = ?',
+　　　　      [id]
+　　　　    );
+　　　　  }
+　　　　}
+　　　　
+　　　　module.exports = Scenic;
+　　　　
+　　　　// models/comment.js
+　　　　const db = require('../config/db');
+　　　　
+　　　　class Comment {
+　　　　  static async create(comment) {
+　　　　    const [result] = await db.execute(
+　　　　      'INSERT INTO comments (user_id, scenic_id, content) VALUES (?, ?, ?)',
+　　　　      [comment.user_id, comment.scenic_id, comment.content]
+　　　　    );
+　　　　    return result.insertId;
+　　　　  }
+　　　　
+　　　　  static async findByUserId(userId) {
+　　　　    const [rows] = await db.execute(
+　　　　      'SELECT * FROM comments WHERE user_id = ? ORDER BY created_at DESC',
+　　　　      [userId]
+　　　　    );
+　　　　    return rows;
+　　　　  }
+　　　　
+　　　　  static async findByScenicId(scenicId) {
+　　　　    const [rows] = await db.execute(
+　　　　      'SELECT c.*, u.nickname, u.avatar FROM comments c ' +
+　　　　      'JOIN users u ON c.user_id = u.id ' +
+　　　　      'WHERE c.scenic_id = ? ORDER BY c.created_at DESC',
+　　　　      [scenicId]
+　　　　    );
+　　　　    return rows;
+　　　　  }
+　　　　
+　　　　  static async delete(id) {
+　　　　    await db.execute(
+　　　　      'DELETE FROM comments WHERE id = ?',
+　　　　      [id]
+　　　　    );
+　　　　  }
+　　　　}
+　　　　
+　　　　module.exports = Comment;
+　　　　
+　　　　// models/trip.js
+　　　　const db = require('../config/db');
+　　　　
+　　　　class Trip {
+　　　　  static async create(trip) {
+　　　　    const [result] = await db.execute(
+　　　　      'INSERT INTO trips (user_id, title, time, location, description) VALUES (?, ?, ?, ?, ?)',
+　　　　      [
+　　　　        trip.user_id,
+　　　　        trip.title,
+　　　　        trip.time,
+　　　　        trip.location,
+　　　　        trip.description
+　　　　      ]
+　　　　    );
+　　　　    return result.insertId;
+　　　　  }
+　　　　
+　　　　static async findAll(page = 1, pageSize = 10) {
+　　　　  const pageSizeNum = parseInt(pageSize) || 10;
+　　　　 const pageNum = Math.max(parseInt(page) || 1, 1); // 确保最小为1
+　　　　const offsetNum = (pageNum - 1) * pageSizeNum;
+　　　　
+　　　　  const [rows] = await db.execute(
+　　　　    'SELECT t.*, u.nickname, u.avatar FROM trips t ' +
+　　　　    'JOIN users u ON t.user_id = u.id ' +
+　　　　    'ORDER BY t.created_at DESC LIMIT ? OFFSET ?',
+　　　　    [pageSizeNum, offsetNum] // 使用转换后的参数
+　　　　  );
+　　　　  return rows;
+　　　　}
+　　　　
+　　　　  static async findById(id) {
+　　　　    const [rows] = await db.execute(
+　　　　      'SELECT * FROM trips WHERE id = ?',
+　　　　      [id]
+　　　　    );
+　　　　    return rows[0];
+　　　　  }
+　　　　
+　　　　  static async findByUserId(userId) {
+　　　　    const [rows] = await db.execute(
+　　　　      'SELECT * FROM trips WHERE user_id = ? ORDER BY created_at DESC',
+　　　　      [userId]
+　　　　    );
+　　　　    return rows;
+　　　　  }
+　　　　
+　　　　  static async delete(id) {
+　　　　    await db.execute(
+　　　　      'DELETE FROM trips WHERE id = ?',
+　　　　      [id]
+　　　　    );
+　　　　  }
+　　　　}
+　　　　
+　　　　module.exports = Trip;
+　　　　
+　　　　// models/message.js
+　　　　const db = require('../config/db');
+　　　　
+　　　　class Message {
+　　　　  static async create(message) {
+　　　　    const [result] = await db.execute(
+　　　　      'INSERT INTO messages (sender_id, receiver_id, content) VALUES (?, ?, ?)',
+　　　　      [message.sender_id, message.receiver_id, message.content]
+　　　　    );
+　　　　    return result.insertId;
+　　　　  }
+　　　　
+　　　　  static async getConversations(userId) {
+　　　　    const [rows] = await db.execute(`
+　　　　      SELECT DISTINCT 
+　　　　        CASE WHEN sender_id = ? THEN receiver_id ELSE sender_id END AS partner_id,
+　　　　        MAX(created_at) AS last_time
+　　　　      FROM messages
+　　　　      WHERE sender_id = ? OR receiver_id = ?
+　　　　      GROUP BY partner_id
+　　　　      ORDER BY last_time DESC
+　　　　    `, [userId, userId, userId]);
+　　　　    return rows;
+　　　　  }
+　　　　
+　　　　  static async findByUsers(userId1, userId2) {
+　　　　    const [rows] = await db.execute(`
+　　　　      SELECT m.*, u.nickname as sender_name 
+　　　　      FROM messages m
+　　　　      JOIN users u ON m.sender_id = u.id
+　　　　      WHERE (sender_id = ? AND receiver_id = ?)
+　　　　         OR (sender_id = ? AND receiver_id = ?)
+　　　　      ORDER BY created_at ASC
+　　　　    `, [userId1, userId2, userId2, userId1]);
+　　　　    return rows;
+　　　　  }
+　　　　
+　　　　  static async delete(id) {
+　　　　    await db.execute(
+　　　　      'DELETE FROM messages WHERE id = ?',
+　　　　      [id]
+　　　　    );
+　　　　  }
+　　　　}
+　　　　
+　　　　module.exports = Message;
+　　　　
+　　　　```
+　　　　
+　　　　```javascript
+　　　　
+　　　　// controllers/authController.js
+　　　　// 在文件顶部添加引用
+　　　　const wechatConfig = require('../config/wechat');
+　　　　const bcrypt = require('bcryptjs');
+　　　　const jwt = require('jsonwebtoken');
+　　　　const axios = require('axios');
+　　　　const User = require('../models/user');
+　　　　const { generateResponse } = require('../utils/response');
+　　　　const smsService = require('../services/smsService');
+　　　　
+　　　　async function encryptPassword(password) {
+　　　　  try {
+　　　　    return await bcrypt.hash(password, 10);
+　　　　  } catch (error) {
+　　　　    console.error('密码加密失败:', error.message);
+　　　　    throw new Error('密码加密失败');
+　　　　  }
+　　　　}
+　　　　
+　　　　class AuthController {
+　　　　  async register(req, res, next) {
+　　　　    try {
+　　　　      const { phone, password, code } = req.body;
+　　　　      
+　　　　      const verification = await smsService.verifyCode(phone, code);
+　　　　      if (!verification.isValid) {
+　　　　        return res.status(400).json(generateResponse(400, null, verification.message));
+　　　　      }
+　　　　
+　　　　      const existingUser = await User.findByPhone(phone);
+　　　　      if (existingUser) {
+　　　　        return res.status(409).json(generateResponse(409, null, '手机号已注册'));
+　　　　      }
+　　　　
+　　　　      const hashedPassword = await encryptPassword(password);
+　　　　      const newUser = await User.create({
+　　　　        phone,
+　　　　        password: hashedPassword
+　　　　      });
+　　　　
+　　　　      const token = jwt.sign(
+　　　　        { userId: newUser.insertId },
+　　　　        process.env.JWT_SECRET,
+　　　　        { expiresIn: '2h' }
+　　　　      );
+　　　　
+　　　　      const refreshToken = jwt.sign(
+　　　　        { userId: newUser.insertId },
+　　　　        process.env.JWT_REFRESH_SECRET,
+　　　　        { expiresIn: '7d' }
+　　　　      );
+　　　　
+　　　　      res.status(201).json(generateResponse(201, { 
+　　　　        token, 
+　　　　        refreshToken 
+　　　　      }));
+　　　　
+　　　　    } catch (error) {
+　　　　      next(error);
+　　　　    }
+　　　　  }
+　　　　
+　　　　  async wechatLogin(req, res, next) {
+　　　　    try {
+　　　　      const { code } = req.body;
+　　　　      const response = await axios.get(wechatConfig.api.jscode2session, {
+　　　　        params: {
+　　　　          appid: wechatConfig.appid,
+　　　　          secret: wechatConfig.secret,
+　　　　          js_code: code,
+　　　　          grant_type: wechatConfig.login.grantType
+　　　　        },
+　　　　        timeout: wechatConfig.login.timeout
+　　　　      });
+　　　　
+　　　　      const { openid } = response.data;
+　　　　      let user = await User.findByOpenid(openid);
+　　　　
+　　　　      if (!user) {
+　　　　        const createResult = await User.create({
+　　　　          openid,
+　　　　          nickname: `微信用户${Math.floor(Math.random() * 100000)}`,
+　　　　          avatar: wechatConfig.DEFAULT_AVATAR
+　　　　        });
+　　　　        user = { id: createResult.insertId };
+　　　　      }
+　　　　
+　　　　      const token = jwt.sign(
+　　　　        { userId: user.id },
+　　　　        process.env.JWT_SECRET,
+　　　　        { expiresIn: '2h' }
+　　　　      );
+　　　　
+　　　　      const refreshToken = jwt.sign(
+　　　　        { userId: user.id },
+　　　　        process.env.JWT_REFRESH_SECRET,
+　　　　        { expiresIn: '7d' }
+　　　　      );
+　　　　
+　　　　      res.json(generateResponse(200, { 
+　　　　        token, 
+　　　　        refreshToken 
+　　　　      }));
+　　　　    } catch (error) {
+　　　　      next(error);
+　　　　    }
+　　　　  }
+　　　　
+　　　　  async login(req, res, next) {
+　　　　    try {
+　　　　      const { phone, password } = req.body;
+　　　　      const user = await User.findByPhone(phone);
+　　　　      
+　　　　      if (!user || !(await bcrypt.compare(password, user.password))) {
+　　　　        return res.status(401).json(generateResponse(401, null, '认证失败'));
+　　　　      }
+　　　　
+　　　　      const token = jwt.sign(
+　　　　        { userId: user.id },
+　　　　        process.env.JWT_SECRET,
+　　　　        { expiresIn: '2h' }
+　　　　      );
+　　　　
+　　　　      const refreshToken = jwt.sign(
+　　　　        { userId: user.id },
+　　　　        process.env.JWT_REFRESH_SECRET,
+　　　　        { expiresIn: '7d' }
+　　　　      );
+　　　　
+　　　　      res.json(generateResponse(200, { 
+　　　　        token, 
+　　　　        refreshToken,
+　　　　        expiresIn: 7200
+　　　　      }));
+　　　　    } catch (error) {
+　　　　      next(error);
+　　　　    }
+　　　　  }
+　　　　}
+　　　　
+　　　　module.exports = new AuthController();
+　　　　
+　　　　// controllers/scenicController.js（示例实现）
+　　　　const Scenic = require('../models/scenic');
+　　　　const Comment = require('../models/comment');
+　　　　const { generateResponse } = require('../utils/response');
+　　　　
+　　　　class ScenicController {
+　　　　  async getScenicList(req, res, next) {
+　　　　    try {
+　　　　      const scenics = await Scenic.findAll();
+　　　　      res.json(generateResponse(200, scenics));
+　　　　    } catch (error) {
+　　　　      next(error);
+　　　　    }
+　　　　  }
+　　　　
+　　　　  async getScenicDetail(req, res, next) {
+　　　　    try {
+　　　　      const scenic = await Scenic.findById(req.params.id);
+　　　　      if (!scenic) {
+　　　　        return res.status(404).json(generateResponse(404, null, '景点不存在'));
+　　　　      }
+　　　　      res.json(generateResponse(200, scenic));
+　　　　    } catch (error) {
+　　　　      next(error);
+　　　　    }
+　　　　  }
+　　　　
+　　　　  async createComment(req, res, next) {
+　　　　    try {
+　　　　      const { content } = req.body;
+　　　　      const comment = await Comment.create({
+　　　　        user_id: req.userId,
+　　　　        scenic_id: req.params.id,
+　　　　        content
+　　　　      });
+　　　　      res.status(201).json(generateResponse(201, comment));
+　　　　    } catch (error) {
+　　　　      next(error);
+　　　　    }
+　　　　  }
+　　　　}
+　　　　
+　　　　module.exports = new ScenicController();
+　　　　
+　　　　
+　　　　// controllers/tripController.js（示例实现）
+　　　　const Trip = require('../models/trip');
+　　　　const { generateResponse } = require('../utils/response');
+　　　　
+　　　　class TripController {
+　　　　  async getTripList(req, res, next) {
+　　　　    try {
+　　　　      const trips = await Trip.findAll();
+　　　　      res.json(generateResponse(200, trips));
+　　　　    } catch (error) {
+　　　　      next(error);
+　　　　    }
+　　　　  }
+　　　　
+　　　　  async createTrip(req, res, next) {
+　　　　    try {
+　　　　      const { title, time, location, description } = req.body;
+　　　　      const trip = await Trip.create({
+　　　　        user_id: req.userId,
+　　　　        title,
+　　　　        time,
+　　　　        location,
+　　　　        description
+　　　　      });
+　　　　      res.status(201).json(generateResponse(201, trip));
+　　　　    } catch (error) {
+　　　　      next(error);
+　　　　    }
+　　　　  }
+　　　　
+　　　　  async deleteTrip(req, res, next) {
+　　　　    try {
+　　　　      const trip = await Trip.findById(req.params.id);
+　　　　      if (!trip || trip.user_id !== req.userId) {
+　　　　        return res.status(403).json(generateResponse(403, null, '无权操作'));
+　　　　      }
+　　　　      await Trip.delete(req.params.id);
+　　　　      res.json(generateResponse(200, null, '删除成功'));
+　　　　    } catch (error) {
+　　　　      next(error);
+　　　　    }
+　　　　  }
+　　　　}
+　　　　
+　　　　module.exports = new TripController();
+　　　　
+　　　　// controllers/messageController.js
+　　　　const Message = require('../models/message');
+　　　　const { generateResponse } = require('../utils/response');
+　　　　
+　　　　class MessageController {
+　　　　  // 发送私信
+　　　　  async sendMessage(req, res, next) {
+　　　　    try {
+　　　　      const { content } = req.body;
+　　　　      const message = await Message.create({
+　　　　        sender_id: req.userId,
+　　　　        receiver_id: req.params.userId,
+　　　　        content
+　　　　      });
+　　　　      res.status(201).json(generateResponse(201, message));
+　　　　    } catch (error) {
+　　　　      next(error);
+　　　　    }
+　　　　  }
+　　　　
+　　　　  // 获取会话列表
+　　　　  async getConversations(req, res, next) {
+　　　　    try {
+　　　　      const conversations = await Message.getConversations(req.userId);
+　　　　      res.json(generateResponse(200, conversations));
+　　　　    } catch (error) {
+　　　　      next(error);
+　　　　    }
+　　　　  }
+　　　　
+　　　　  // 获取历史消息
+　　　　  async getMessageHistory(req, res, next) {
+　　　　    try {
+　　　　      const messages = await Message.findByUsers(
+　　　　        req.userId,
+　　　　        req.params.userId
+　　　　      );
+　　　　      res.json(generateResponse(200, messages));
+　　　　    } catch (error) {
+　　　　      next(error);
+　　　　    }
+　　　　  }
+　　　　}
+　　　　
+　　　　module.exports = new MessageController();
+　　　　
+　　　　// controllers/userController.js
+　　　　const User = require('../models/user');
+　　　　const Comment = require('../models/comment');
+　　　　const Trip = require('../models/trip');
+　　　　const Message = require('../models/message');
+　　　　const { generateResponse } = require('../utils/response');
+　　　　
+　　　　class UserController {
+　　　　  // 获取用户资料
+　　　　  async getProfile(req, res, next) {
+　　　　    try {
+　　　　      const user = await User.findById(req.userId);
+　　　　      if (!user) {
+　　　　        return res.status(404).json(generateResponse(404, null, '用户不存在'));
+　　　　      }
+　　　　      res.json(generateResponse(200, {
+　　　　        nickname: user.nickname,
+　　　　        avatar: user.avatar,
+　　　　        phone: user.phone
+　　　　      }));
+　　　　    } catch (error) {
+　　　　      next(error);
+　　　　    }
+　　　　  }
+　　　　
+　　　　  // 更新用户资料
+　　　　  async updateProfile(req, res, next) {
+　　　　    try {
+　　　　      const { nickname, avatar } = req.body;
+　　　　      await User.update(req.userId, { nickname, avatar });
+　　　　      res.json(generateResponse(200, null, '资料更新成功'));
+　　　　    } catch (error) {
+　　　　      next(error);
+　　　　    }
+　　　　  }
+　　　　
+　　　　  // 获取我的评论
+　　　　  async getMyComments(req, res, next) {
+　　　　    try {
+　　　　      const comments = await Comment.findByUserId(req.userId);
+　　　　      res.json(generateResponse(200, comments));
+　　　　    } catch (error) {
+　　　　      next(error);
+　　　　    }
+　　　　  }
+　　　　
+　　　　  // 获取我的行程
+　　　　  async getMyTrips(req, res, next) {
+　　　　    try {
+　　　　      const trips = await Trip.findByUserId(req.userId);
+　　　　      res.json(generateResponse(200, trips));
+　　　　    } catch (error) {
+　　　　      next(error);
+　　　　    }
+　　　　  }
+　　　　
+　　　　  // 获取我的聊天
+　　　　  async getMyChats(req, res, next) {
+　　　　    try {
+　　　　      const chats = await Message.getConversations(req.userId);
+　　　　      res.json(generateResponse(200, chats));
+　　　　    } catch (error) {
+　　　　      next(error);
+　　　　    }
+　　　　  }
+　　　　}
+　　　　
+　　　　module.exports = new UserController();
+　　　　```
+　　　　
+　　　　```javascript
+　　　　// routes/auth.js
+　　　　const express = require('express');
+　　　　const router = express.Router();
+　　　　const authController = require('../controllers/authController');
+　　　　const smsService = require('../services/smsService');
+　　　　const { generateResponse } = require('../utils/response');
+　　　　
+　　　　router.post('/login', authController.login);
+　　　　router.post('/register', authController.register);
+　　　　router.post('/wechat-login', authController.wechatLogin);
+　　　　router.post('/send-code', async (req, res) => {
+　　　　  try {
+　　　　    const { phone } = req.body;
+　　　　    await smsService.sendVerificationCode(phone); // 添加await
+　　　　    res.json(generateResponse(200, null, '验证码已发送'));
+　　　　  } catch (error) {
+　　　　    res.status(500).json(generateResponse(500, null, '验证码发送失败'));
+　　　　  }
+　　　　});
+　　　　
+　　　　module.exports = router;
+　　　　
+　　　　// routes/scenic.js
+　　　　const express = require('express');
+　　　　const router = express.Router();
+　　　　const scenicController = require('../controllers/scenicController');
+　　　　const authMiddleware = require('../middlewares/auth');
+　　　　
+　　　　// 景点列表（无需认证）
+　　　　router.get('/', scenicController.getScenicList);
+　　　　
+　　　　// 景点详情（无需认证）
+　　　　router.get('/:id', scenicController.getScenicDetail);
+　　　　
+　　　　// 评论相关操作需要认证
+　　　　router.use(authMiddleware);
+　　　　
+　　　　// 发布评论
+　　　　router.post('/:id/comments', scenicController.createComment);
+　　　　
+　　　　module.exports = router;
+　　　　
+　　　　// routes/trip.js
+　　　　const express = require('express');
+　　　　const router = express.Router();
+　　　　const tripController = require('../controllers/tripController');
+　　　　const authMiddleware = require('../middlewares/auth');
+　　　　
+　　　　// 所有行程操作都需要认证
+　　　　router.use(authMiddleware);
+　　　　
+　　　　// 行程列表
+　　　　router.get('/', tripController.getTripList);
+　　　　
+　　　　// 发布行程
+　　　　router.post('/', tripController.createTrip);
+　　　　
+　　　　// 删除行程
+　　　　router.delete('/:id', tripController.deleteTrip);
+　　　　
+　　　　module.exports = router;
+　　　　
+　　　　// routes/message.js
+　　　　const express = require('express');
+　　　　const router = express.Router();
+　　　　const messageController = require('../controllers/messageController');
+　　　　const authMiddleware = require('../middlewares/auth');
+　　　　
+　　　　router.use(authMiddleware);
+　　　　
+　　　　// 获取会话列表
+　　　　router.get('/conversations', messageController.getConversations);
+　　　　
+　　　　// 发送私信
+　　　　router.post('/:userId/send', messageController.sendMessage);
+　　　　
+　　　　// 获取历史消息
+　　　　router.get('/:userId/history', messageController.getMessageHistory);
+　　　　
+　　　　module.exports = router;
+　　　　
+　　　　// routes/user.js
+　　　　const express = require('express');
+　　　　const router = express.Router();
+　　　　const userController = require('../controllers/userController');
+　　　　const authMiddleware = require('../middlewares/auth');
+　　　　
+　　　　router.use(authMiddleware);
+　　　　
+　　　　// 用户资料
+　　　　router.route('/profile')
+　　　　  .get(userController.getProfile)
+　　　　  .put(userController.updateProfile);
+　　　　
+　　　　// 我的评论
+　　　　router.get('/comments', userController.getMyComments);
+　　　　
+　　　　// 我的行程
+　　　　router.get('/trips', userController.getMyTrips);
+　　　　
+　　　　// 我的聊天
+　　　　router.get('/chats', userController.getMyChats);
+　　　　
+　　　　module.exports = router;
+　　　　
+　　　　```
+　　　　
+　　　　```javascript
+　　　　
+　　　　// middlewares/auth.js
+　　　　const jwt = require('jsonwebtoken');
+　　　　const { generateResponse } = require('../utils/response');
+　　　　
+　　　　module.exports = (req, res, next) => {
+　　　　  // 从请求头获取Token
+　　　　  const authHeader = req.header('Authorization');
+　　　　
+　　　　  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+　　　　    return res.status(401).json(
+　　　　      generateResponse(401, null, '未提供访问令牌')
+　　　　    );
+　　　　  }
+　　　　
+　　　　  // 提取纯Token部分
+　　　　  const token = authHeader.replace('Bearer ', '');
+　　　　
+　　　　  try {
+　　　　    // 验证并解码Token
+　　　　    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+　　　　    
+　　　　    // 附加用户信息到请求对象
+　　　　    req.userId = decoded.userId;
+　　　　    
+　　　　    // 继续后续处理
+　　　　    next();
+　　　　  } catch (error) {
+　　　　    // 处理不同错误类型
+　　　　    let message = '无效令牌';
+　　　　    if (error instanceof jwt.TokenExpiredError) {
+　　　　      message = '令牌已过期';
+　　　　    } else if (error instanceof jwt.JsonWebTokenError) {
+　　　　      message = '非法令牌格式';
+　　　　    }
+　　　　
+　　　　    res.status(401).json(
+　　　　      generateResponse(401, null, message)
+　　　　    );
+　　　　  }
+　　　　};
+　　　　
+　　　　// middlewares/errorHandler.js
+　　　　const { generateResponse } = require('../utils/response');
+　　　　
+　　　　module.exports = (err, req, res, next) => {
+　　　　  console.error('[Error]', new Date().toISOString(), err.stack);
+　　　　
+　　　　if (err.code === 'ECONNREFUSED') {
+　　　　  return res.status(503).json(
+　　　　    generateResponse(503, null, '数据库连接失败')
+　　　　  );
+　　　　}
+　　　　
+　　　　  // 处理已知错误类型
+　　　　  if (err.name === 'ValidationError') {
+　　　　    return res.status(400).json(
+　　　　      generateResponse(400, null, '参数校验失败')
+　　　　    );
+　　　　  }
+　　　　
+　　　　  // 默认错误处理
+　　　　  res.status(500).json(
+　　　　    generateResponse(500, null, '服务器内部错误')
+　　　　  );
+　　　　};
+　　　　
+　　　　```
+　　　　
+　　　　// services/wechatService.js
+　　　　const axios = require('axios');
+　　　　const wechatConfig = require('../config/wechat');
+　　　　const { generateResponse } = require('../utils/response');
+　　　　
+　　　　class WechatService {
+　　　　  /**
+　　　　   * 微信登录凭证校验
+　　　　   * @param {string} code 微信临时登录凭证
+　　　　   * @returns {Promise<{openid: string, session_key: string}>}
+　　　　   */
+　　　　  async codeToSession(code) {
+　　　　    try {
+　　　　      const response = await axios.get(wechatConfig.api.jscode2session, {
+　　　　        params: {
+　　　　          appid: wechatConfig.appid,
+　　　　          secret: wechatConfig.secret,
+　　　　          js_code: code,
+　　　　          grant_type: wechatConfig.login.grantType
+　　　　        },
+　　　　        timeout: wechatConfig.login.timeout
+　　　　      });
+　　　　      
+　　　　      if (response.data.errcode) {
+　　　　        throw new Error(`微信接口错误: ${response.data.errmsg}`);
+　　　　      }
+　　　　      return response.data;
+　　　　    } catch (error) {
+　　　　      console.error('[微信服务] 登录凭证校验失败:', error.message);
+　　　　      throw new Error('微信登录服务暂不可用');
+　　　　    }
+　　　　  }
+　　　　
+　　　　  /**
+　　　　   * 获取微信用户信息（示例方法）
+　　　　   * @param {string} accessToken 
+　　　　   * @param {string} openid 
+　　　　   */
+　　　　  async getUserInfo(accessToken, openid) {
+　　　　    // 实际需要调用微信相关接口实现
+　　　　    return {
+　　　　      nickname: '微信用户',
+　　　　      avatar: 'https://example.com/default-wechat-avatar.jpg'
+　　　　    };
+　　　　  }
+　　　　}
+　　　　
+　　　　module.exports = new WechatService();
+　　　　
+　　　　// services/smsService.js
+　　　　const logger = require('../utils/logger');
+　　　　
+　　　　// 内存缓存对象
+　　　　const memoryCache = new Map();
+　　　　const CAPTCHA_EXPIRATION = 300; // 验证码有效期（秒）
+　　　　
+　　　　class SmsService {
+　　　　  async sendVerificationCode(phone) {
+　　　　    try {
+　　　　      const { question, answer } = this.generateMathCaptcha();
+　　　　      
+　　　　      // 存储到内存并设置过期时间
+　　　　      memoryCache.set(phone, {
+　　　　        answer,
+　　　　        expireAt: Date.now() + CAPTCHA_EXPIRATION * 1000
+　　　　      });
+　　　　      
+　　　　      // 设置定时清除过期验证码
+　　　　      setTimeout(() => {
+　　　　        memoryCache.delete(phone);
+　　　　      }, CAPTCHA_EXPIRATION * 1000);
+　　　　
+　　　　      logger.info(`发送验证码到 ${phone}: ${question}`);
+　　　　      return true;
+　　　　    } catch (error) {
+　　　　      logger.error(`发送验证码失败: ${error.message}`);
+　　　　      throw new Error('验证码发送失败');
+　　　　    }
+　　　　  }
+　　　　
+　　　　  async verifyCode(phone, code) {
+　　　　    try {
+　　　　      const cacheItem = memoryCache.get(phone);
+　　　　      
+　　　　      if (!cacheItem || Date.now() > cacheItem.expireAt) {
+　　　　        return { isValid: false, message: '验证码未发送或已过期' };
+　　　　      }
+　　　　      
+　　　　      const isValid = code.trim() === cacheItem.answer.trim();
+　　　　      
+　　　　      if (isValid) {
+　　　　        memoryCache.delete(phone);
+　　　　      }
+　　　　      
+　　　　      return {
+　　　　        isValid,
+　　　　        message: isValid ? '验证成功' : '验证码错误'
+　　　　      };
+　　　　    } catch (error) {
+　　　　      logger.error(`验证码校验失败: ${error.message}`);
+　　　　      return { isValid: false, message: '验证服务暂时不可用' };
+　　　　    }
+　　　　  }
+　　　　
+　　　　  // 生成数学验证码（保持原有实现）
+　　　　  generateMathCaptcha() {
+　　　　    const num1 = Math.floor(Math.random() * 10);
+　　　　    const num2 = Math.floor(Math.random() * 10);
+　　　　    return {
+　　　　      question: `${num1} + ${num2} = ?`,
+　　　　      answer: String(num1 + num2)
+　　　　    };
+　　　　  }
+　　　　}
+　　　　
+　　　　module.exports = new SmsService();
+　　　　
+　　　　// utils/response.js
+　　　　function generateResponse(code, data = null, msg = '') {
+　　　　  return {
+　　　　    code,
+　　　　    data,
+　　　　    msg: msg || (code === 200 ? 'success' : 'error')
+　　　　  };
+　　　　}
+　　　　
+　　　　module.exports = { generateResponse };
+　　　　
+　　　　// utils/validators.js
+　　　　const { generateResponse } = require('./response');
+　　　　const validator = require('validator');
+　　　　
+　　　　class Validators {
+　　　　  // 手机号格式校验
+　　　　  static validatePhone(req, res, next) {
+　　　　    const { phone } = req.body;
+　　　　    if (!validator.isMobilePhone(phone, 'zh-CN')) {
+　　　　      return res.status(400).json(
+　　　　        generateResponse(400, null, '手机号格式不正确')
+　　　　      );
+　　　　    }
+　　　　    next();
+　　　　  }
+　　　　
+　　　　  // 密码强度校验（至少6位，包含字母+数字）
+　　　　  static validatePassword(req, res, next) {
+　　　　    const { password } = req.body;
+　　　　    if (!validator.isLength(password, { min: 6 }) || 
+　　　　        !validator.matches(password, /^(?=.*[A-Za-z])(?=.*\d).+$/)) {
+　　　　      return res.status(400).json(
+　　　　        generateResponse(400, null, '密码需至少6位且包含字母和数字')
+　　　　      );
+　　　　    }
+　　　　    next();
+　　　　  }
+　　　　
+　　　　  // 评论内容校验（1-200字）
+　　　　  static validateComment(req, res, next) {
+　　　　    const { content } = req.body;
+　　　　    if (!validator.isLength(content, { min: 1, max: 200 })) {
+　　　　      return res.status(400).json(
+　　　　        generateResponse(400, null, '评论内容需在1-200字之间')
+　　　　      );
+　　　　    }
+　　　　    next();
+　　　　  }
+　　　　
+　　　　  // 行程字段校验
+　　　　  static validateTrip(req, res, next) {
+　　　　    const { title, location, description } = req.body;
+　　　　    const errors = [];
+　　　　    
+　　　　    if (!validator.isLength(title, { max: 30 })) {
+　　　　      errors.push('标题不能超过30字');
+　　　　    }
+　　　　    if (!validator.isLength(location, { max: 50 })) {
+　　　　      errors.push('地点不能超过50字');
+　　　　    }
+　　　　    if (!validator.isLength(description, { max: 50 })) {
+　　　　      errors.push('简介不能超过50字');
+　　　　    }
+　　　　    
+　　　　    if (errors.length > 0) {
+　　　　      return res.status(400).json(generateResponse(400, null, errors.join('；')));
+　　　　    }
+　　　　    next();
+　　　　  }
+　　　　}
+　　　　
+　　　　module.exports = Validators;
+　　　　
+　　　　// utils/logger.js
+　　　　const fs = require('fs');
+　　　　const path = require('path');
+　　　　const { format } = require('date-fns');
+　　　　
+　　　　class Logger {
+　　　　  constructor() {
+　　　　   this.logDirectory = path.join(__dirname, '../logs');
+　　　　    this.ensureDirectoryExists();
+　　　　  }
+　　　　
+　　　　  // 创建日志目录
+　　　　  ensureDirectoryExists() {
+　　　　    if (!fs.existsSync(this.logDirectory)) {
+　　　　      fs.mkdirSync(this.logDirectory);
+　　　　    }
+　　　　  }
+　　　　
+　　　　  // 获取当前日志文件名
+　　　　  get logFilePath() {
+　　　　    const date = format(new Date(), 'yyyy-MM-dd');
+　　　　    return path.join(this.logDirectory, `${date}.log`);
+　　　　  }
+　　　　
+　　　　  // 通用日志方法
+　　　　  log(level, message) {
+　　　　    const timestamp = format(new Date(), 'yyyy-MM-dd HH:mm:ss');
+　　　　    const logMessage = `[${timestamp}] [${level.toUpperCase()}] ${message}\n`;
+　　　　    
+　　　　    fs.appendFile(this.logFilePath, logMessage, (err) => {
+　　　　      if (err) console.error('写入日志失败:', err);
+　　　　    });
+　　　　  }
+　　　　
+　　　　  // 分级日志方法
+　　　　  info(message) {
+　　　　    this.log('info', message);
+　　　　    console.log(message);
+　　　　  }
+　　　　
+　　　　  error(message) {
+　　　　    this.log('error', message);
+　　　　    console.error(message);
+　　　　  }
+　　　　
+　　　　  warn(message) {
+　　　　    this.log('warn', message);
+　　　　    console.warn(message);
+　　　　  }
+　　　　}
+　　　　
+　　　　// 单例模式导出
+　　　　module.exports = new Logger();
+　　　　
+　　　　```
+　　　　
+　　　　```javascript
+　　　　// app.js
+　　　　const express = require('express');
+　　　　const app = express();
+　　　　const db = require('./config/db');
+　　　　const authRouter = require('./routes/auth');
+　　　　const authMiddleware = require('./middlewares/auth');
+　　　　const scenicRouter = require('./routes/scenic');
+　　　　const tripRouter = require('./routes/trip');
+　　　　const messageRouter = require('./routes/message');
+　　　　const userRouter = require('./routes/user');
+　　　　const errorHandler = require('./middlewares/errorHandler');
+　　　　const swaggerConfig = require('./config/swagger');
+　　　　
+　　　　const requiredEnvVars = ['JWT_SECRET', 'DB_PASSWORD', 'WECHAT_APPID'];
+　　　　requiredEnvVars.forEach(env => {
+　　　　  if (!process.env[env]) {
+　　　　    throw new Error(`缺少必要环境变量: ${env}`);
+　　　　  }
+　　　　});
+　　　　
+　　　　// 中间件
+　　　　app.use(express.json());
+　　　　app.use(express.urlencoded({ extended: true }));
+　　　　
+　　　　// 正确顺序
+　　　　swaggerConfig(app);           
+　　　　
+　　　　// 路由
+　　　　app.use('/api/auth', authRouter);
+　　　　app.use('/api/scenics', scenicRouter);
+　　　　
+　　　　// 需要认证的路由
+　　　　app.use('/api/trips', authMiddleware, tripRouter);
+　　　　app.use('/api/messages', authMiddleware, messageRouter);
+　　　　app.use('/api/users', authMiddleware, userRouter);
+　　　　
+　　　　// 错误处理
+　　　　app.use(errorHandler);
+　　　　
+　　　　const PORT = process.env.PORT || 3000;
+　　　　app.listen(PORT, () => {
+　　　　  console.log(`Server running on port ${PORT}`);
+　　　　});
+　　　　
+　　　　
+　　　　
+　　　　
+　　
+　　
+　　
+　　
+　　
+　　
+　　
+　　
+　　
+　　
+　　
+　　

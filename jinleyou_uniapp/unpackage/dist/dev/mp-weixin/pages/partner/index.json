@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "行程列表",
+  "usingComponents": {
+    "empty-state": "../../components/EmptyState",
+    "card-list": "../../components/CardList",
+    "loading-overlay": "../../components/LoadingOverlay"
+  }
+}

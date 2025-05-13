@@ -1,0 +1,91 @@
+/**
+ * 这里是uni-app内置的常用样式变量
+ *
+ * uni-app 官方扩展插件及插件市场（https://ext.dcloud.net.cn）上很多三方插件均使用了这些样式变量
+ * 如果你是插件开发者，建议你使用scss预处理，并在插件代码中直接使用这些变量（无需 import 这个文件），方便用户通过搭积木的方式开发整体风格一致的App
+ *
+ */
+/**
+ * 如果你是App开发者（插件使用者），你可以通过修改这些变量来定制自己的插件主题，实现自定义主题功能
+ *
+ * 如果你的项目同样使用了scss预处理，你也可以直接在你的 scss 代码中使用如下变量，同时无需 import 这个文件
+ */
+/* 颜色变量 */
+/* 行为相关颜色 */
+/* 文字基本颜色 */
+/* 背景颜色 */
+/* 边框颜色 */
+/* 尺寸变量 */
+/* 文字尺寸 */
+/* 图片尺寸 */
+/* Border Radius */
+/* 水平间距 */
+/* 垂直间距 */
+/* 透明度 */
+/* 文章场景相关 */
+.form-container.data-v-da79eebb {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f8fafc;
+}
+.form-scroll.data-v-da79eebb {
+  flex: 1;
+}
+.form-body.data-v-da79eebb {
+  padding: 32rpx 32rpx 120rpx;
+}
+.form-footer.data-v-da79eebb {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 24rpx 32rpx;
+  background: #ffffff;
+  box-shadow: 0 -4rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+.submit-button.data-v-da79eebb {
+  background: linear-gradient(135deg, #4369f4, #304ffe);
+  color: white;
+  border-radius: 48rpx;
+  padding: 28rpx;
+  font-size: 32rpx;
+  font-weight: 500;
+  box-shadow: 0 4rpx 16rpx rgba(67, 105, 244, 0.3);
+}
+.field-tips.data-v-da79eebb {
+  font-size: 26rpx;
+  color: #94a3b8;
+  margin: 12rpx 0 20rpx;
+  line-height: 1.4;
+}
+.picker-box.data-v-da79eebb {
+  padding: 28rpx;
+  border: 2rpx solid #e2e8f0;
+  border-radius: 12rpx;
+  color: #334155;
+  font-size: 30rpx;
+  transition: all 0.2s;
+}
+.picker-box.data-v-da79eebb:active {
+  background-color: #f1f5f9;
+}
+.form-input.data-v-da79eebb,
+.form-textarea.data-v-da79eebb {
+  padding: 28rpx;
+  border: 2rpx solid #e2e8f0;
+  border-radius: 12rpx;
+  font-size: 30rpx;
+  color: #1e293b;
+}
+.form-input.data-v-da79eebb::-webkit-input-placeholder, .form-textarea.data-v-da79eebb::-webkit-input-placeholder {
+  color: #cbd5e1;
+}
+.form-input.data-v-da79eebb::placeholder,
+.form-textarea.data-v-da79eebb::placeholder {
+  color: #cbd5e1;
+}
+.form-textarea.data-v-da79eebb {
+  min-height: 240rpx;
+  line-height: 1.6;
+}
