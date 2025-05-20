@@ -112,20 +112,3 @@
   padding: 10rpx;
   margin-left: 10rpx;
 }
-.auth-container .agreement.data-v-46a64346 {
-  margin-top: auto;
-  padding-top: 40rpx;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  font-size: 24rpx;
-  color: #999;
-}
-.auth-container .agreement checkbox.data-v-46a64346 {
-  transform: scale(0.8);
-}
-.auth-container .agreement .link.data-v-46a64346 {
-  color: #2867CE;
-  margin: 0 5rpx;
-}

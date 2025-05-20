@@ -6,13 +6,12 @@
       class="card-item"
       @click="handleClick(item)"
     >
-      <!-- 修改后的旅行计划卡片 -->
+      <!-- 旅行计划卡片 -->
       <template v-if="type === 'plan'">
         <text class="type-tag plan-tag">{{ typeMap[type] }}</text>
         <view class="card-content">
           <view class="card-header">
             <text class="card-title">标题：{{ item.title }}</text>
-            <!-- 将时间元素移动到标题下方 -->
             <text class="card-time">
               日期：{{ dayjs(item.date).format('YY/MM/DD') }}
             </text>
@@ -26,33 +25,71 @@
         <button class="chat-button">私聊</button>
       </template>
 
-      <!-- 导游服务卡片 -->
-  <!-- 导游服务卡片 -->
-  <template v-else>
-    <text class="type-tag guide-tag">{{ typeMap[type] }}</text>
-    <view class="guide-header">
-      <view class="guide-info">
-        <text class="card-location">地点： {{ item.destination }}</text>
-        <text class="guide-service">类型：{{ item.type }}</text>
-        <text class="guide-price">价格：{{ item.price }}元</text>
-      </view>
-    </view>
-    <text class="guide-desc">描述：{{ item.description }}</text>
-    <button 
-      v-if="showDelete"
-      class="delete-button"
-      @click.stop="$emit('delete', item)"
-    >
-      删除
-    </button>
-    <button
-      v-else
-      class="chat-button"
-      @click.stop="$emit('chat', item)"
-    >
-      私聊
-    </button>
-  </template>
+      <!-- 修改后的导游服务卡片 -->
+      <template v-if="type === 'guide'">
+        <text class="type-tag guide-tag">{{ typeMap[type] }}</text>
+        <view class="guide-header">
+          <view class="guide-info">
+            <text class="guide-date">日期：{{ dayjs(item.serviceDate).format('YYYY-MM-DD') }}</text>
+            <text class="card-location">景点：{{ item.destination }}</text>
+            <view class="service-meta">
+              <text class="guide-service">类型：{{ item.type }}</text>
+              <text class="guide-duration">时长：{{ item.duration }}小时</text>
+            </view>
+          </view>
+        </view>
+        <text class="guide-price">{{ item.price }}元/天</text>
+        <text class="guide-desc">服务描述：{{ item.description }}</text>
+        <button 
+          v-if="showDelete"
+          class="delete-button"
+          @click.stop="$emit('delete', item)"
+        >
+          删除
+        </button>
+        <button
+          v-else
+          class="chat-button"
+          @click.stop="$emit('chat', item)"
+        >
+          私聊
+        </button>
+      </template>
+
+      <!-- 用户评论卡片 -->
+      <template v-if="type === 'review'">
+        <view class="review-header">
+            <image :src="item.avatar" class="avatar" />
+            <view class="user-info-container">
+              <view class="user-info">
+                <text class="nickname">{{ item.nickname }}</text>
+              </view>
+            </view>
+            <button 
+              v-if="showDelete"
+              class="delete-button"
+              @click.stop="$emit('delete', item)"
+            >
+              删除
+            </button>
+        </view>
+        <view class="review-content">
+          <text class="scenic-name line-clamp-1">景点：{{ item.scenicName }}</text>
+          <text class="content-text line-clamp-1">评论内容：{{ item.content }}</text>
+          <view class="image-preview" v-if="item.images && item.images.length">
+              <image 
+                  v-for="(img, idx) in item.images"
+                  :key="idx"
+                  :src="img"
+                  mode="aspectFill"
+                  class="review-image"
+              />
+          </view>
+          <text class="review-time">
+            {{ dayjs(item.createdAt).format('YYYY-MM-DD') }}
+          </text>
+        </view>
+      </template>
     </view>
   </view>
 </template>
@@ -62,7 +99,8 @@ import dayjs from 'dayjs';
 import { computed } from 'vue';
 const typeMap = {
   plan: '旅行计划',
-  guide: '导游服务'
+  guide: '导游服务',
+  review:'用户评论'
 };
 
 defineProps({
@@ -72,7 +110,7 @@ defineProps({
   },
   type: {
     type: String,
-    validator: (value) => ['plan', 'guide'].includes(value)
+    validator: (value) => ['plans', 'guides', 'review'].includes(value)
   },
     showDelete: {
       type: Boolean,
@@ -108,7 +146,6 @@ const handleClick = (item) => {
   }
 }
 
-/* 类型标签 */
 .type-tag {
   position: absolute;
   top: 24rpx;
@@ -129,7 +166,7 @@ const handleClick = (item) => {
     color: #fa8c16;
   }
 }
-/* 新增删除按钮样式 */
+
 .delete-button {
   position: absolute;
   right: 32rpx;
@@ -142,7 +179,7 @@ const handleClick = (item) => {
   font-size: 28rpx;
   line-height: 1.5;
 }
-/* 通用按钮样式 */
+
 .chat-button {
   position: absolute;
   right: 32rpx;
@@ -156,14 +193,141 @@ const handleClick = (item) => {
   line-height: 1.5;
 }
 
-/* 计划卡片样式 */
+/* 导游卡片优化样式 */
+.guide-header {
+  margin-top: 40rpx;
+  padding-right: 180rpx;
+
+  .guide-info {
+    .guide-date {
+      display: block;
+      margin-bottom: 8rpx;
+      font-size: 28rpx;
+      color: #666;
+      line-height: 1.6;
+    }
+    
+    .card-location {
+      display: block;
+      font-size: 28rpx;
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 8rpx;
+    }
+
+    .service-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10rpx 20rpx;
+      margin: 8rpx 0;
+
+      .guide-service,
+      .guide-duration {
+        font-size: 28rpx;
+        color: #666;
+        white-space: normal;
+      }
+    }
+  }
+}
+
+.guide-price {
+  position: absolute;
+  right: 32rpx;
+  top: 80rpx;
+  font-size: 28rpx;
+  color: #ff4444;
+  font-weight: 600;
+}
+
+.guide-desc {
+  color: #666;
+  font-size: 28rpx;
+  line-height: 1.4;
+  margin-top: 10rpx;
+  padding-right: 160rpx;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+/* 用户评论样式保持不变 */
+.review-header {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  margin-bottom: 20rpx;
+
+  .avatar {
+    width: 80rpx;
+    height: 80rpx;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .user-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .nickname {
+    font-size: 28rpx;
+    color: #333;
+    line-height: 1.4;
+    white-space: normal;
+  }
+}
+
+.review-content {
+  .scenic-name {
+    color: #666;
+    font-size: 26rpx;
+    line-height: 1.4;
+    white-space: normal;
+    word-break: break-all;
+  }
+  .content-text {
+    font-size: 28rpx;
+    color: #333;
+    line-height: 1.6;
+    margin-bottom: 20rpx;
+  }
+  .line-clamp-1 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+    overflow: hidden;
+    word-break: break-all;
+  }
+  .image-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16rpx;
+    margin-top: 20rpx;
+  
+    .review-image {
+      width: 200rpx;
+      height: 200rpx;
+      border-radius: 8rpx;
+    }
+  }
+  .review-time {
+    color: #999;
+    font-size: 24rpx;
+    margin-top: 16rpx;
+    display: block;
+  }
+}
+
+/* 旅行计划卡片样式 */
 .card-content {
   padding-right: 160rpx;
   
   .card-header {
     display: flex;
-	flex-direction: column;
-	gap: 8rpx;
+    flex-direction: column;
+    gap: 8rpx;
     margin-top: 36rpx;
     margin-bottom: 12rpx;
   }
@@ -176,7 +340,7 @@ const handleClick = (item) => {
   .card-time {
     color: #666;
     font-size: 26rpx;
-	margin-bottom: 4rpx;
+    margin-bottom: 4rpx;
   }
 
   .card-meta {
@@ -196,56 +360,5 @@ const handleClick = (item) => {
     -webkit-line-clamp: 2;
     overflow: hidden;
   }
-}
-
-/* 导游卡片样式 */
-.guide-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-top: 36rpx;
-  padding-right: 160rpx;
-
-    .guide-info {
-      display: flex;
-      flex-direction: column;
-      gap: 8rpx;
-    }
-
-  .guide-name {
-    display: block;
-    font-size: 30rpx;
-    font-weight: 500;
-    margin-bottom: 8rpx;
-  }
-
-  .guide-location {
-    font-size: 26rpx;
-    color: #666;
-    margin-bottom: 8rpx;
-  }
-
-  .guide-service {
-    color: #888;
-    font-weight: 500;
-    font-size: 28rpx;
-  }
-  
-  .guide-price {
-  color: #888;
-  font-size: 28rpx;
-}
-}
-
-.guide-desc {
-  color: #888;
-  font-size: 28rpx;
-  line-height: 1.4;
-  margin-top: 16rpx;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-  padding-right: 160rpx;
 }
 </style>

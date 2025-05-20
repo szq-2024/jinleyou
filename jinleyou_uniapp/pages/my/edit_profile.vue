@@ -145,48 +145,48 @@ export default {
     
     // 更换头像
     async changeAvatar() {
-        try {
-            const res = await uni.chooseImage({
-                count: 1,
-                sizeType: ['compressed'],
-                sourceType: ['album', 'camera'],
-				extension: ['jpg', 'jpeg', 'png', 'gif']
+      try {
+        const res = await uni.chooseImage({
+          count: 1,
+          sizeType: ['compressed'],
+          sourceType: ['album', 'camera'],
+          extension: ['jpg', 'jpeg', 'png', 'gif']
+        });
+    
+        if (res.tempFilePaths && res.tempFilePaths.length) {
+          this.uploading = true;
+          this.uploadProgress = 0;
+          
+          try {
+            const uploadRes = await uni.uploadFile({
+              url: `${ENV_CONFIG[process.env.NODE_ENV]}/api/user/upload`,
+              filePath: res.tempFilePaths[0],
+              name: 'file',
+              header: {
+                Authorization: `Bearer ${uni.getStorageSync('token')}`
+              }
             });
     
-            if (res.tempFilePaths && res.tempFilePaths.length) {
-                this.uploading = true;
-                this.uploadProgress = 0;
-                
-                try {
-                    // 直接使用uni.uploadFile API
-                    const uploadRes = await uni.uploadFile({
-                        url: `${ENV_CONFIG[process.env.NODE_ENV]}/api/user/upload`, 
-                        filePath: res.tempFilePaths[0],
-                        name: 'file',
-                        header: {
-                            Authorization: `Bearer ${uni.getStorageSync('token')}`
-                        }
-                    });
-    
-                    if (uploadRes.statusCode === 200) {
-                        const data = JSON.parse(uploadRes.data);
-                        if (data.code === 200) {
-                            this.form.avatar = data.url;
-                        } else {
-                            uni.showToast({ title: data.msg || '上传失败', icon: 'none' });
-                        }
-                    }
-                } catch (error) {
-                    console.error('上传失败:', error);
-                    uni.showToast({ title: '头像上传失败', icon: 'none' });
-                } finally {
-                    this.uploading = false;
-                }
+            if (uploadRes.statusCode === 200) {
+              const data = JSON.parse(uploadRes.data);
+              if (data.code === 200) {
+                const baseURL = ENV_CONFIG[process.env.NODE_ENV];
+                this.form.avatar = baseURL + data.url;
+              } else {
+                uni.showToast({ title: data.msg || '上传失败', icon: 'none' });
+              }
             }
-        } catch (error) {
-            console.error('选择图片失败:', error);
+          } catch (error) {
+            console.error('上传失败:', error);
+            uni.showToast({ title: '头像上传失败', icon: 'none' });
+          } finally {
             this.uploading = false;
+          }
         }
+      } catch (error) {
+        console.error('选择图片失败:', error);
+        this.uploading = false;
+      }
     },
     
     // 性别选择
@@ -212,7 +212,6 @@ export default {
       this.saving = true;
       try {
         let updateData = { ...this.form };
-        // 如果头像已更新，form.avatar已包含新URL，无需再次上传
         const { code, message } = await http.post('/api/user/update', updateData);
         
         if (code === 200) {
@@ -260,18 +259,18 @@ export default {
   .form-container {
     flex: 1;
     padding: 30rpx;
-	width: 100vw;
-	box-sizing: border-box;
+    width: 100%;
+    box-sizing: border-box;
     
     .form-item {
-	  overflow: visible;
-	  width: 100%;
+      width: 100%;
       margin-bottom: 40rpx;
       background-color: #fff;
       padding: 30rpx;
       border-radius: 12rpx;
       box-shadow: 0 2rpx 6rpx rgba(0, 0, 0, 0.05);
-      
+      box-sizing: border-box;
+
       .label {
         display: block;
         font-size: 28rpx;
@@ -284,10 +283,12 @@ export default {
         font-size: 28rpx;
         padding: 10rpx 0;
         border-bottom: 1rpx solid #eee;
+        box-sizing: border-box;
       }
       
       textarea {
         min-height: 120rpx;
+        width: 100%;
       }
       
       .error-text {
@@ -347,13 +348,14 @@ export default {
     
     .save-btn {
       margin-top: 60rpx;
-      background-color: #4cd964;
+      background-color: #2867CE;
       color: #fff;
       border: none;
       height: 80rpx;
       line-height: 80rpx;
       font-size: 32rpx;
       border-radius: 40rpx;
+      width: 100%;
       
       &.disabled {
         background-color: #ccc;
@@ -361,5 +363,22 @@ export default {
       }
     }
   }
+}
+
+/* 全局滚动容器修正 */
+.uni-scroll-view {
+  width: 100% !important;
+}
+
+.uni-scroll-view-content {
+  min-width: auto !important;
+  max-width: 100% !important;
+}
+
+::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+  color: transparent;
 }
 </style>

@@ -13,7 +13,7 @@
 				<uni-icons type="person" size="20" color="#2867CE" />
 				<input 
 					v-model="form.username"
-					placeholder="请输入手机号/用户名"
+					placeholder="请输入手机号/账号"
 					placeholder-class="placeholder"
 					maxlength="20"
 					@focus="resetError('username')"
@@ -46,7 +46,7 @@
 						</label>
 					</checkbox-group>
 				</view>
-				<text class="forgot-password" @click="navigateTo('/pages/forgot-password/index')">忘记密码？</text>
+				<text class="forgot-password" @click="navigateTo('/pages/forgot-password/forgot-password')">忘记密码？</text>
 			</view>
 			<!-- 登录按钮 -->
 			<button 
@@ -63,31 +63,6 @@
 				<text>还没有账号？</text>
 				<text class="link" @click="navigateTo('/pages/register/index')">立即注册</text>
 			</view>
-		</view>
-
-		<!-- 第三方登录 -->
-		<view class="social-login">
-			<view class="divider">
-				<text>或通过以下方式登录</text>
-			</view>
-			<view class="social-icons">
-				<button class="icon-btn" open-type="getPhoneNumber" @getphonenumber="onWechatLogin">
-					<uni-icons type="weixin" size="24" color="#09BB07" />
-				</button>
-			</view>
-		</view>
-
-		<!-- 协议声明 -->
-		<view class="agreement">
-			<checkbox-group @change="toggleAgreement">
-				<label>
-					<checkbox :checked="agreed" color="#4cd964" />
-					<text>我已阅读并同意</text>
-				</label>
-			</checkbox-group>
-			<text class="link" @click="showAgreement">《用户协议》</text>
-			<text>和</text>
-			<text class="link" @click="showPrivacy">《隐私政策》</text>
 		</view>
 	</view>
 </template>
@@ -109,7 +84,6 @@ export default {
 			},
 			showPassword: false,
 			rememberMe: false,
-			agreed: true,
 			loading: false
 		}
 	},
@@ -119,8 +93,7 @@ export default {
 				this.form.username && 
 				this.form.password && 
 				!this.errors.username && 
-				!this.errors.password &&
-				this.agreed
+				!this.errors.password
 			)
 		}
 	},
@@ -144,10 +117,10 @@ export default {
 			let valid = true
 			const { username, password } = this.form
 			if (!username.trim()) {
-				this.errors.username = '请输入用户名/手机号'
+				this.errors.username = '请输入账号/手机号'
 				valid = false
 			} else if (!/^[\w\u4e00-\u9fa5]{3,20}$/.test(username)) {
-				this.errors.username = '用户名格式不正确'
+				this.errors.username = '账号格式不正确'
 				valid = false
 			}
       
@@ -172,11 +145,6 @@ export default {
 			this.rememberMe = e.detail.value.length > 0
 		},
     
-		// 协议勾选
-		toggleAgreement(e) {
-			this.agreed = e.detail.value.length > 0
-		},
-    
 		// 处理登录
 		async handleLogin() {
 		    if (!this.validate()) return;
@@ -187,25 +155,19 @@ export default {
 		            account: this.form.username,
 		            password: this.form.password
 		        });
-				console.log('🔍 完整响应结构:', JSON.stringify(res, null, 2));
-		        // 存储token和用户信息
 		        uni.setStorageSync('token', res.data.token);
-		        this.SET_INFO(res.data.user); 
-				// 新增：存储userId和avatar到本地存储
+		        this.SET_INFO(res.data.user);
 				uni.setStorageSync('userId', res.data.user.userId);
-				uni.setStorageSync('avatar', res.data.user.avatar); // 同时存储头像
-				// 假设后端返回expires_in，单位为秒
+				uni.setStorageSync('avatar', res.data.user.avatar);
 				const expiresIn = res.data.expires_in;
-				const expireTime = Date.now() + expiresIn * 1000; // 转换为毫秒时间戳
+				const expireTime = Date.now() + expiresIn * 1000;
 				uni.setStorageSync('tokenExpire', expireTime);
 		
-		        // 显示成功提示
 		        uni.showToast({
 		                title: '登录成功',
 		                icon: 'success',
 		                duration: 1500,
 		                success: () => { 
-		                    // 关键修改点：使用switchTab
 		                    uni.switchTab({
 		                        url: '/pages/index/index',
 		                        success: () => {
@@ -213,7 +175,6 @@ export default {
 		                        },
 		                        fail: (err) => {
 		                            console.error('路由跳转失败:', err);
-		                            // 备用跳转方案
 		                            uni.reLaunch({ 
 		                                url: '/pages/index/index' 
 		                            });
@@ -222,8 +183,6 @@ export default {
 		                }
 		            });
 					
-		
-		        // 记住账号
 		        if (this.rememberMe) {
 		            uni.setStorageSync('rememberedAccount', this.form);
 		        } else {
@@ -238,22 +197,6 @@ export default {
 		    } finally {
 		        this.loading = false;
 		    }
-		},
-    
-		// 微信登录
-		onWechatLogin(e) {
-			console.log('微信登录:', e)
-		// 实际处理微信登录逻辑
-		},
-    
-		// 显示协议
-		showAgreement() {
-			uni.navigateTo({ url: '/pages/webview?url=' + encodeURIComponent('https://localhost:3000/agreement') })
-		},
-    
-		// 显示隐私政策
-		showPrivacy() {
-			uni.navigateTo({ url: '/pages/webview?url=' + encodeURIComponent('https://localhost:3000/privacy') })
 		},
     
 		// 通用跳转
@@ -381,76 +324,6 @@ export default {
 				color: #2867CE;
 				margin-left: 10rpx;
 			}
-		}
-	}
-  
-	.social-login {
-		margin-top: 80rpx;
-    
-		.divider {
-			position: relative;
-			text-align: center;
-			color: #999;
-			font-size: 26rpx;
-			margin-bottom: 40rpx;
-      
-			&::before,
-			&::after {
-				content: '';
-				position: absolute;
-				top: 50%;
-				width: 100rpx;
-				height: 1rpx;
-				background-color: #e5e5e5;
-			}
-      
-			&::before {
-				left: 50rpx;
-			}
-      
-			&::after {
-				right: 50rpx;
-			}
-		}
-    
-		.social-icons {
-			display: flex;
-			justify-content: center;
-			gap: 80rpx;
-      
-			.icon-btn {
-				width: 80rpx;
-				height: 80rpx;
-				border-radius: 50%;
-				background-color: #fff;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
-				padding: 0;
-				margin: 0;
-				border: none;
-			}
-		}
-	}
-  
-	.agreement {
-		margin-top: auto;
-		padding-top: 40rpx;
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: center;
-		align-items: center;
-		font-size: 24rpx;
-		color: #999;
-    
-		checkbox {
-			transform: scale(0.8);
-		}
-    
-		.link {
-			color: #2867CE;
-			margin: 0 5rpx;
 		}
 	}
 }

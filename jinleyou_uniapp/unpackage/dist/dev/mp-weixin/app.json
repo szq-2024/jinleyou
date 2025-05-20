@@ -2,7 +2,7 @@
   "pages": [
     "pages/login/login",
     "pages/register/index",
-    "pages/forgot-password/index",
+    "pages/forgot-password/forgot-password",
     "pages/index/index",
     "pages/partner/index",
     "pages/partner/create-plans",
@@ -11,11 +11,13 @@
     "pages/guide/guide",
     "pages/my/my",
     "pages/scenic/scenic",
+    "pages/review/review",
     "pages/my/my_messages",
-    "pages/my/my_comments",
+    "pages/my/my_review",
     "pages/my/my_trips",
     "pages/my/my_services",
     "pages/my/setting",
+    "pages/my/change_password",
     "pages/my/edit_profile"
   ],
   "window": {

@@ -88,7 +88,8 @@ const _sfc_main = {
             if (uploadRes.statusCode === 200) {
               const data = JSON.parse(uploadRes.data);
               if (data.code === 200) {
-                this.form.avatar = data.url;
+                const baseURL = api_http.ENV_CONFIG["development"];
+                this.form.avatar = baseURL + data.url;
               } else {
                 common_vendor.index.showToast({ title: data.msg || "上传失败", icon: "none" });
               }
@@ -135,7 +136,7 @@ const _sfc_main = {
           common_vendor.index.showToast({ title: message, icon: "none" });
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/my/edit_profile.vue:226", "保存失败:", error);
+        common_vendor.index.__f__("error", "at pages/my/edit_profile.vue:225", "保存失败:", error);
         common_vendor.index.showToast({ title: "保存失败，请重试", icon: "none" });
       } finally {
         this.saving = false;

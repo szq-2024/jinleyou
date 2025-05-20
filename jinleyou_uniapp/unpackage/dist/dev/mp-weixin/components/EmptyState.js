@@ -18,7 +18,7 @@ const _sfc_main = {
     };
     return (_ctx, _cache) => {
       return common_vendor.e({
-        a: common_assets._imports_0$2,
+        a: common_assets._imports_0$1,
         b: common_vendor.t(__props.description),
         c: __props.actionText
       }, __props.actionText ? {

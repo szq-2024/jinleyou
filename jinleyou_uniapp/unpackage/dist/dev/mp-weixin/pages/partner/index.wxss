@@ -38,24 +38,107 @@
 }
 .tab-nav {
   display: flex;
-  gap: 32rpx;
-  margin-top: 32rpx;
+  gap: 24rpx;
+  margin-top: 24rpx;
 }
 .tab-btn {
-  padding: 16rpx 48rpx;
-  border-radius: 40rpx;
+  padding: 12rpx 40rpx;
+  border-radius: 32rpx;
   background: rgba(255, 255, 255, 0.15);
-  font-size: 28rpx;
+  font-size: 26rpx;
   transition: all 0.3s;
 }
 .tab-btn.active-tab {
   background: white;
   color: #4369f4;
-  box-shadow: 0 8rpx 24rpx rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.1);
 }
 .content-section {
   flex: 1;
   padding: 32rpx;
+}
+.filter-section {
+  background: white;
+  border-radius: 16rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+  margin-bottom: 32rpx;
+}
+.filter-header {
+  padding: 24rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f5f7fa;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  color: #606266;
+}
+.filter-header:active {
+  background: #ebeff5;
+}
+.filter-content {
+  padding: 24rpx;
+}
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-bottom: 24rpx;
+}
+.filter-input {
+  flex: 1;
+  padding: 20rpx 24rpx;
+  border: 1rpx solid #eee;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  background: #f8f9fa;
+}
+.date-separator {
+  color: #909399;
+  padding: 0 12rpx;
+}
+.preference-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-top: 24rpx;
+}
+.preference-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 12rpx 24rpx;
+  background: #f5f7fa;
+  border-radius: 40rpx;
+  font-size: 24rpx;
+  color: #606266;
+}
+.preference-tag checkbox {
+  margin-right: 8rpx;
+  transform: scale(0.9);
+}
+.filter-actions {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 24rpx;
+}
+.filter-actions button {
+  flex: 1;
+  padding: 16rpx 24rpx;
+  border-radius: 24rpx;
+  font-size: 26rpx;
+  transition: all 0.2s;
+}
+.filter-actions button:active {
+  opacity: 0.9;
+  transform: scale(0.98);
+}
+.filter-actions .reset-btn {
+  background: #f0f2f5;
+  color: #606266;
+}
+.filter-actions .confirm-btn {
+  background: #4369f4;
+  color: white;
 }
 .floating-actions {
   position: fixed;
@@ -63,15 +146,17 @@
   bottom: 120rpx;
 }
 .fab-button {
-  width: 100rpx;
-  height: 100rpx;
-  border-radius: 50%;
-  background: #4369f4;
-  box-shadow: 0 8rpx 24rpx rgba(66, 133, 244, 0.3);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 24rpx;
+  box-shadow: 0 6rpx 18rpx rgba(66, 133, 244, 0.3);
+}
+.fab-button .fab-icon {
+  font-size: 40rpx;
 }
 .fab-icon {
   font-size: 48rpx;
+}
+.loading-overlay {
+  /* 原有加载样式 */
 }

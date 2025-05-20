@@ -1,0 +1,1 @@
+{"version":3,"file":"account.js","sources":["../Programming/HBuilderX.4.57.2025032507/HBuilderX/plugins/uniapp-cli-vite/uniPage:/cGFnZXMvbXkvYWNjb3VudC52dWU"],"sourcesContent":["import MiniProgramPage from 'C:/Users/SZQ/Desktop/jinleyou_uniapp/pages/my/account.vue'\nwx.createPage(MiniProgramPage)"],"names":[],"mappings":";;;;;;;AACA,GAAG,WAAW,eAAe;"}

@@ -17,7 +17,7 @@ const _sfc_main = {
       description: ""
     });
     const isLoading = common_vendor.ref(false);
-    const tianjinPlaces = ["五大道", "意式风情街", "天津之眼", "古文化街"];
+    const tianjinPlaces = ["五大道", "意式风情街", "天津之眼", "古文化街", "盘山"];
     const preferenceOptions = ["美食", "历史", "自然", "摄影", "亲子"];
     const onDateChange = (e) => {
       form.value.date = e.detail.value;

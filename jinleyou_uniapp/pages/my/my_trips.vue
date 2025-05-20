@@ -69,6 +69,10 @@ const fetchTrips = async () => {
 // 删除行程
 const handleDelete = async (id) => {
   try {
+	const { confirm } = await uni.showModal({
+	  title: '确认删除',
+	  content: '确定要删除这个服务吗？删除后不可恢复',
+	});
     await http.delete(`/api/travel-plans/${id}`);
     uni.showToast({ title: '删除成功', icon: 'success' });
     trips.value = trips.value.filter(item => item.id !== id);

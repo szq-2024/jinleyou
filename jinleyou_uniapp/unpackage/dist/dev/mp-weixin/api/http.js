@@ -81,32 +81,27 @@ async function enhancedHttp(url, options = {}) {
 async function requestWithRetry(params, retry = GLOBAL_CONFIG.retryCount) {
   for (let i = 0; i <= retry; i++) {
     try {
-      const res = await common_vendor.index.request(params);
-      if (Array.isArray(res)) {
-        const [error, successRes] = res;
+      const response = await common_vendor.index.request(params);
+      if (Array.isArray(response)) {
+        const [error, res] = response;
         if (error)
           throw error;
         return {
-          statusCode: successRes.statusCode,
-          data: successRes.data,
-          headers: successRes.header || {}
+          statusCode: res.statusCode,
+          data: res.data,
+          headers: res.header
         };
       }
       return {
-        statusCode: res.statusCode || res.status,
-        data: res.data,
-        headers: res.header || res.headers || {}
+        statusCode: response.statusCode || 200,
+        data: response.data,
+        headers: response.headers || {}
       };
     } catch (error) {
-      if (i === retry) {
-        throw Object.assign(error, {
-          requestUrl: params.url,
-          retryCount: i + 1
-        });
-      }
+      if (i === retry)
+        throw error;
     }
   }
-  throw new Error(`请求失败: 超过最大重试次数 (${retry})`);
 }
 async function requestInterceptor() {
   return {
@@ -134,13 +129,13 @@ function responseInterceptor(response) {
     case statusCode >= 400:
       throw new Error(`客户端错误 (${statusCode})`);
     case statusCode === 200:
-      return data;
+      return response.data;
     default:
       throw new Error(`未知状态码: ${statusCode}`);
   }
 }
 function errorHandler(error) {
-  common_vendor.index.__f__("error", "at api/http.js:210", "请求错误:", error);
+  common_vendor.index.__f__("error", "at api/http.js:205", "请求错误:", error);
   common_vendor.index.showToast({
     title: error.message || "网络请求失败",
     icon: "none",

@@ -40,8 +40,6 @@
 .card-item.data-v-ef655cc5:active {
   transform: scale(0.98);
 }
-
-/* 类型标签 */
 .type-tag.data-v-ef655cc5 {
   position: absolute;
   top: 24rpx;
@@ -60,8 +58,6 @@
   background: #fff7e6;
   color: #fa8c16;
 }
-
-/* 新增删除按钮样式 */
 .delete-button.data-v-ef655cc5 {
   position: absolute;
   right: 32rpx;
@@ -74,8 +70,6 @@
   font-size: 28rpx;
   line-height: 1.5;
 }
-
-/* 通用按钮样式 */
 .chat-button.data-v-ef655cc5 {
   position: absolute;
   right: 32rpx;
@@ -89,7 +83,119 @@
   line-height: 1.5;
 }
 
-/* 计划卡片样式 */
+/* 导游卡片优化样式 */
+.guide-header.data-v-ef655cc5 {
+  margin-top: 40rpx;
+  padding-right: 180rpx;
+}
+.guide-header .guide-info .guide-date.data-v-ef655cc5 {
+  display: block;
+  margin-bottom: 8rpx;
+  font-size: 28rpx;
+  color: #666;
+  line-height: 1.6;
+}
+.guide-header .guide-info .card-location.data-v-ef655cc5 {
+  display: block;
+  font-size: 28rpx;
+  color: #666;
+  line-height: 1.6;
+  margin-bottom: 8rpx;
+}
+.guide-header .guide-info .service-meta.data-v-ef655cc5 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx 20rpx;
+  margin: 8rpx 0;
+}
+.guide-header .guide-info .service-meta .guide-service.data-v-ef655cc5,
+.guide-header .guide-info .service-meta .guide-duration.data-v-ef655cc5 {
+  font-size: 28rpx;
+  color: #666;
+  white-space: normal;
+}
+.guide-price.data-v-ef655cc5 {
+  position: absolute;
+  right: 32rpx;
+  top: 80rpx;
+  font-size: 28rpx;
+  color: #ff4444;
+  font-weight: 600;
+}
+.guide-desc.data-v-ef655cc5 {
+  color: #666;
+  font-size: 28rpx;
+  line-height: 1.4;
+  margin-top: 10rpx;
+  padding-right: 160rpx;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+/* 用户评论样式保持不变 */
+.review-header.data-v-ef655cc5 {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  margin-bottom: 20rpx;
+}
+.review-header .avatar.data-v-ef655cc5 {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.review-header .user-info.data-v-ef655cc5 {
+  flex: 1;
+  min-width: 0;
+}
+.review-header .nickname.data-v-ef655cc5 {
+  font-size: 28rpx;
+  color: #333;
+  line-height: 1.4;
+  white-space: normal;
+}
+.review-content .scenic-name.data-v-ef655cc5 {
+  color: #666;
+  font-size: 26rpx;
+  line-height: 1.4;
+  white-space: normal;
+  word-break: break-all;
+}
+.review-content .content-text.data-v-ef655cc5 {
+  font-size: 28rpx;
+  color: #333;
+  line-height: 1.6;
+  margin-bottom: 20rpx;
+}
+.review-content .line-clamp-1.data-v-ef655cc5 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  overflow: hidden;
+  word-break: break-all;
+}
+.review-content .image-preview.data-v-ef655cc5 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+  margin-top: 20rpx;
+}
+.review-content .image-preview .review-image.data-v-ef655cc5 {
+  width: 200rpx;
+  height: 200rpx;
+  border-radius: 8rpx;
+}
+.review-content .review-time.data-v-ef655cc5 {
+  color: #999;
+  font-size: 24rpx;
+  margin-top: 16rpx;
+  display: block;
+}
+
+/* 旅行计划卡片样式 */
 .card-content.data-v-ef655cc5 {
   padding-right: 160rpx;
 }
@@ -124,49 +230,4 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
-}
-
-/* 导游卡片样式 */
-.guide-header.data-v-ef655cc5 {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  margin-top: 36rpx;
-  padding-right: 160rpx;
-}
-.guide-header .guide-info.data-v-ef655cc5 {
-  display: flex;
-  flex-direction: column;
-  gap: 8rpx;
-}
-.guide-header .guide-name.data-v-ef655cc5 {
-  display: block;
-  font-size: 30rpx;
-  font-weight: 500;
-  margin-bottom: 8rpx;
-}
-.guide-header .guide-location.data-v-ef655cc5 {
-  font-size: 26rpx;
-  color: #666;
-  margin-bottom: 8rpx;
-}
-.guide-header .guide-service.data-v-ef655cc5 {
-  color: #888;
-  font-weight: 500;
-  font-size: 28rpx;
-}
-.guide-header .guide-price.data-v-ef655cc5 {
-  color: #888;
-  font-size: 28rpx;
-}
-.guide-desc.data-v-ef655cc5 {
-  color: #888;
-  font-size: 28rpx;
-  line-height: 1.4;
-  margin-top: 16rpx;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-  padding-right: 160rpx;
 }

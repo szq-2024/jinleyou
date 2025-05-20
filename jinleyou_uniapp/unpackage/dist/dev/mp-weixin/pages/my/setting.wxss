@@ -28,21 +28,6 @@
   background-color: #f5f5f5;
   padding-bottom: 100rpx;
 }
-.settings-container .nav-bar.data-v-5fad43a3 {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20rpx 30rpx;
-  background-color: #fff;
-  border-bottom: 1rpx solid #f0f0f0;
-}
-.settings-container .nav-bar .title.data-v-5fad43a3 {
-  font-size: 36rpx;
-  font-weight: bold;
-}
-.settings-container .nav-bar .right-placeholder.data-v-5fad43a3 {
-  width: 40rpx;
-}
 .settings-container .settings-list.data-v-5fad43a3 {
   background-color: #fff;
   margin-top: 20rpx;
@@ -73,10 +58,9 @@
   display: flex;
   align-items: center;
 }
-.settings-container .settings-list .setting-item .item-right .cache-size.data-v-5fad43a3, .settings-container .settings-list .setting-item .item-right .version.data-v-5fad43a3 {
-  font-size: 26rpx;
-  color: #999;
-  margin-right: 10rpx;
+.settings-container .settings-list .setting-item .item-right .permission-switch.data-v-5fad43a3 {
+  transform: scale(0.85);
+  transform-origin: right center;
 }
 .settings-container .settings-list .setting-item.data-v-5fad43a3:active {
   background-color: #f9f9f9;

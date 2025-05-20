@@ -151,4 +151,165 @@ const login = async (req, res) => {
     }
 };
 
-export { register, login };
+// 忘记密码
+const resetPassword = async (req, res) => {
+    const { account, captchaProblem, captchaAnswer, newPassword } = req.body;
+    // 账号脱敏处理
+    const maskedAccount = account.replace(/(\d{3})\d+(\d{4})/, (match, p1, p2) => p1 + '****' + p2);
+    console.info(`[密码重置] 开始 | 账号: ${maskedAccount}`);
+
+    try {
+        // 验证码格式验证
+        const match = captchaProblem.match(/^(\d+)\s*([+-])\s*(\d+)\s*=\s*\?$/);
+        if (!match) {
+            console.warn('[密码重置] 验证码格式错误');
+            return res.status(400).json({ code: 400, message: '验证码格式错误' });
+        }
+
+        // 计算正确答案
+        const num1 = parseInt(match[1]);
+        const num2 = parseInt(match[3]);
+        const operator = match[2];
+        const correctAnswer = operator === '+' ? num1 + num2 : num1 - num2;
+
+        // 答案验证
+        if (parseInt(captchaAnswer) !== correctAnswer) {
+            console.warn(`[密码重置] 验证码错误 | 预期:${correctAnswer} 实际:${captchaAnswer}`);
+            return res.status(400).json({ code: 400, message: '验证码错误' });
+        }
+
+        // 用户存在性验证
+        console.debug(`[密码重置] 数据库查询 | 账号: ${account}`);
+        const [users] = await pool.query(
+            'SELECT userId, password FROM users WHERE username = ? OR phone = ?',
+            [account, account]
+        );
+
+        if (users.length === 0) {
+            console.warn(`[密码重置] 用户不存在 | 账号: ${maskedAccount}`);
+            return res.status(400).json({ code: 400, message: '用户不存在' });
+        }
+
+        // 密码哈希处理
+        console.time('[密码重置] 密码哈希计算');
+        const salt = await bcrypt.genSalt(10);
+        const newPasswordHash = await bcrypt.hash(newPassword, salt);
+        console.timeEnd('[密码重置] 密码哈希计算');
+
+        // 更新数据库
+        console.debug(`[密码重置] 更新密码 | 用户ID: ${users[0].userId}`);
+        await pool.query(
+            'UPDATE users SET password = ? WHERE userId = ?',
+            [newPasswordHash, users[0].userId]
+        );
+
+        // 记录成功日志
+        console.info(`[密码重置] 成功 | 用户ID: ${users[0].userId}`);
+        res.status(200).json({
+            code: 200,
+            message: '密码重置成功',
+            data: { userId: users[0].userId }
+        });
+
+    } catch (error) {
+        // 错误处理
+        console.error(`[密码重置] 系统错误 | ${error.message}`, {
+            stack: error.stack,
+            requestBody: {
+                account: maskedAccount,
+                captchaProblem: captchaProblem,
+                captchaAnswer: '****',
+                newPassword: '******'
+            }
+        });
+        res.status(500).json({ code: 500, message: '服务器错误' });
+    }
+};
+
+// 忘记密码
+// 在authController.js中添加以下代码
+const changePassword = async (req, res) => {
+    const { identifier, oldPassword, newPassword } = req.body;
+
+    // 脱敏处理日志
+    const maskIdentifier = (id) => {
+        if (!id) return 'null';
+        return id.replace(/(\d{3})\d+(\d{4})/, '$1****$2')
+            .replace(/(.{2}).+(.{2})/, '$1***$2');
+    };
+
+    console.info(`[修改密码] 开始 | 标识: ${maskIdentifier(identifier)}`);
+
+    try {
+        // 参数校验
+        if (!identifier || !oldPassword || !newPassword) {
+            console.warn('[修改密码] 参数错误: 缺少必要字段');
+            return res.status(400).json({ code: 400, message: '请填写完整信息' });
+        }
+
+        // 新密码格式验证
+        if (!/^\d{6,}$/.test(newPassword)) {
+            console.warn(`[修改密码] 密码格式错误: ${newPassword.length}位`);
+            return res.status(400).json({ code: 400, message: '密码需6位以上数字' });
+        }
+
+        // 查询用户
+        console.debug(`[修改密码] 用户查询: ${maskIdentifier(identifier)}`);
+        const [users] = await pool.query(
+            `SELECT userId, password FROM users 
+            WHERE username = ? OR phone = ?`,
+            [identifier, identifier]
+        );
+
+        if (users.length === 0) {
+            console.warn(`[修改密码] 用户不存在: ${maskIdentifier(identifier)}`);
+            return res.status(400).json({ code: 400, message: '用户不存在' });
+        }
+
+        // 密码验证
+        const user = users[0];
+        console.time('[修改密码] 密码比对');
+        const isValid = await bcrypt.compare(oldPassword, user.password);
+        console.timeEnd('[修改密码] 密码比对');
+
+        if (!isValid) {
+            console.warn(`[修改密码] 密码错误 | 用户ID: ${user.userId}`);
+            return res.status(400).json({ code: 400, message: '原密码错误' });
+        }
+
+        // 生成新密码哈希
+        console.time('[修改密码] 哈希生成');
+        const salt = await bcrypt.genSalt(10);
+        const newHash = await bcrypt.hash(newPassword, salt);
+        console.timeEnd('[修改密码] 哈希生成');
+
+        // 更新数据库
+        console.debug(`[修改密码] 更新开始 | 用户ID: ${user.userId}`);
+        await pool.query(
+            `UPDATE users SET password = ? 
+            WHERE userId = ?`,
+            [newHash, user.userId]
+        );
+
+        // 记录安全日志
+        console.info(`[修改密码] 成功 | 用户ID: ${user.userId}`);
+        res.status(200).json({
+            code: 200,
+            message: '密码修改成功',
+            data: { userId: user.userId }
+        });
+
+    } catch (error) {
+        console.error(`[修改密码] 系统错误: ${error.message}`, {
+            stack: error.stack,
+            params: {
+                identifier: maskIdentifier(identifier),
+                oldPassword: '******',
+                newPassword: '******'
+            }
+        });
+        res.status(500).json({ code: 500, message: '服务器内部错误' });
+    }
+};
+
+export { register, login, resetPassword, changePassword };

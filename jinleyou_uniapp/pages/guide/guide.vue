@@ -78,41 +78,55 @@
 </template>
 
 <script>
+import QQMapWX from 'qqmap-wx-jssdk';
+
 export default {
   data() {
-    return {
-      latitude: 39.90469, // 默认北京中心坐标
-      longitude: 116.40717,
-      markers: [],
-      polyline: [],
-      drawerVisible: false,
-      drawerTitle: '',
-      placeList: [],
-      amapPlugin: null
-    }
-  },
-  onLoad() {
-    this.initAMapSDK().then(() => {
-      this.checkLocationAuth();
-    });
-  },
-  methods: {
-    // 初始化高德地图SDK
-    initAMapSDK() {
-      return new Promise((resolve) => {
-        if (typeof AMapWX !== 'undefined') {
-          this.amapPlugin = new AMapWX({
-            key: '052b0297c58a04faf82b59834539a719' // 替换为你自己的高德key
-          });
-          resolve();
-        } else {
-          uni.showToast({
-            title: '地图服务初始化失败',
-            icon: 'none'
-          });
-        }
-      });
+      return {
+		mapKeys: {
+		    location: '6P6BZ-O46CZ-7C3XU-7CDUI-TXUFT-ASFGC',  // 定位专用
+		    toilet: 'ZH7BZ-4P5KQ-MPQ5T-42FXT-MSBH6-XIFDE',      // 厕所搜索
+		    hospital: 'VUABZ-5W7K7-SXUXE-HRZ3W-QKU3T-WZFRG'  // 医院搜索
+		},
+        latitude: 39.136803,
+        longitude: 117.107382,
+        markers: [],
+        polyline: [],
+        drawerVisible: false,
+        drawerTitle: '',
+        placeList: [],
+        qqMap: null,
+        currentCategory: '' // 新增当前分类标识
+      }
     },
+	onLoad() {
+	    this.initQqMapSDK()
+	      .then(() => this.checkLocationAuth())
+	      .catch(err => {
+	        console.error('初始化失败:', err);
+	        uni.showModal({
+	          title: '地图服务异常',
+	          content: '无法加载地图功能，请检查网络或重启应用',
+	          showCancel: false
+	        });
+	      });
+	  },
+	methods: {
+		// 初始化腾讯地图SDK
+		initQqMapSDK() {
+		      return new Promise((resolve, reject) => {
+		        try {
+		          this.qqMap = new QQMapWX({
+		            key: '6P6BZ-O46CZ-7C3XU-7CDUI-TXUFT-ASFGC' // 请替换为实际key
+		          });
+		          console.log('腾讯地图初始化成功');
+		          resolve();
+		        } catch (e) {
+		          console.error('腾讯地图初始化失败:', e);
+		          reject(e);
+		        }
+		      });
+		},
     
     // 检查定位权限
     async checkLocationAuth() {
@@ -137,7 +151,10 @@ export default {
         confirmText: '去设置',
         success: (res) => {
           if (res.confirm) {
-            uni.openSetting();
+            // 跳转到应用内设置页面
+            uni.navigateTo({
+              url: '/pages/my/setting' // 确保路径正确
+            });
           }
         }
       });
@@ -145,27 +162,27 @@ export default {
     
     // 获取当前位置
     async getLocation() {
-      try {
-        uni.showLoading({ title: '定位中...', mask: true });
-        
-        const res = await uni.getLocation({
-          type: 'gcj02',
-          isHighAccuracy: true
-        });
-        
-        this.latitude = res.latitude;
-        this.longitude = res.longitude;
-        this.addMyLocationMarker();
-        
-      } catch (err) {
-        console.error('定位失败:', err);
-        uni.showToast({
-          title: '定位失败，已使用默认位置',
-          icon: 'none'
-        });
-      } finally {
-        uni.hideLoading();
-      }
+          try {
+            uni.showLoading({ title: '定位中...', mask: true });
+            const locationMap = new QQMapWX({ key: this.mapKeys.location });
+            const res = await uni.getLocation({
+              type: 'gcj02', // 腾讯地图使用GCJ-02坐标系
+              isHighAccuracy: true
+            });
+            
+            this.latitude = res.latitude;
+            this.longitude = res.longitude;
+            this.addMyLocationMarker();
+            
+          } catch (err) {
+            console.error('定位失败:', err);
+            uni.showToast({
+              title: '定位失败，已使用默认位置',
+              icon: 'none'
+            });
+          } finally {
+            uni.hideLoading();
+          }
     },
     
     // 添加当前位置标记
@@ -184,63 +201,76 @@ export default {
     
     // 搜索附近厕所
     searchNearbyToilets() {
-      this.searchNearby('厕所', '050000');
-    },
-    
-    // 搜索附近医疗点
-    searchNearbyHospitals() {
-      this.searchNearby('医院', '090000');
-    },
-    
-    // 搜索附近地点
-    searchNearby(keyword, types) {
-      uni.showLoading({ title: '搜索中...' });
-      
-      this.amapPlugin.getPoiAround({
-        location: `${this.longitude},${this.latitude}`,
-        keywords: keyword,
-        types: types,
-        success: (data) => {
-          uni.hideLoading();
-          
-          this.placeList = data.markers.map(item => ({
-            id: item.id,
-            name: item.name,
-            address: item.address,
-            latitude: item.latitude,
-            longitude: item.longitude,
-            distance: item.distance
-          }));
-          
-          this.showPlaceMarkers(data.markers);
-          this.drawerTitle = keyword === '厕所' ? '附近厕所' : '附近医疗点';
+      const toiletMap = new QQMapWX({ key: this.mapKeys.toilet });
+      toiletMap.search({
+        keyword: '厕所',
+        location: {
+          latitude: this.latitude,
+          longitude: this.longitude
+        },
+        success: (res) => {
+          this.processSearchResult(res.data, 'toilet');
+          this.drawerTitle = '附近厕所';
           this.drawerVisible = true;
         },
         fail: (err) => {
-          uni.hideLoading();
-          uni.showToast({
-            title: '搜索失败',
-            icon: 'none'
-          });
-          console.error('搜索失败:', err);
+          console.error('厕所搜索失败:', err);
+          uni.showToast({ title: '搜索失败', icon: 'none' });
         }
       });
     },
+
     
+    // 搜索附近医疗点
+    searchNearbyHospitals() {
+      const hospitalMap = new QQMapWX({ key: this.mapKeys.hospital });
+      hospitalMap.search({
+        keyword: '医院',
+        location: {
+          latitude: this.latitude,
+          longitude: this.longitude
+        },
+        success: (res) => {
+          this.processSearchResult(res.data, 'hospital');
+          this.drawerTitle = '附近医疗点';
+          this.drawerVisible = true;
+        },
+        fail: (err) => {
+          console.error('医院搜索失败:', err);
+          uni.showToast({ title: '搜索失败', icon: 'none' });
+        }
+      });
+    },
+	 // 处理搜索结果
+	processSearchResult(data, category) {
+	  this.placeList = data.map(item => ({
+	    id: item.id,
+	    name: item.title,
+	    address: item.address,
+	    latitude: item.location.lat,
+	    longitude: item.location.lng,
+	    distance: item._distance || '未知'
+	  }));
+	  this.showPlaceMarkers(category);
+	},
     // 显示地点标记
-    showPlaceMarkers(markers) {
-      const placeMarkers = markers.map((item, index) => ({
-        id: index + 1,
-        latitude: item.latitude,
-        longitude: item.longitude,
-        iconPath: '/static/marker.png',
-        width: 24,
-        height: 24,
-        title: item.name,
-        zIndex: 9
-      }));
-      
-      this.markers = [...this.markers, ...placeMarkers];
+    showPlaceMarkers(category) {
+        const iconPath = category === 'hospital' 
+          ? '/static/hospital-marker.png' 
+          : '/static/marker.png';
+        
+        const placeMarkers = this.placeList.map((item, index) => ({
+          id: index + 1,
+          latitude: item.latitude,
+          longitude: item.longitude,
+          iconPath: iconPath,
+          width: 24,
+          height: 24,
+          title: item.name,
+          zIndex: 9
+        }));
+        
+        this.markers = [...this.markers, ...placeMarkers];
     },
     
     // 导航到指定地点

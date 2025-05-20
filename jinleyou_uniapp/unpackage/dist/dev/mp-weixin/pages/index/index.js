@@ -1,89 +1,74 @@
 "use strict";
 const common_vendor = require("../../common/vendor.js");
+const api_http = require("../../api/http.js");
+const pageSize = 10;
 const _sfc_main = {
   __name: "index",
   setup(__props) {
-    const scenicList = common_vendor.ref([
-      {
-        id: "1",
-        name: "天津之眼",
-        description: "世界上唯一建在桥上的摩天轮，天津地标性建筑",
-        imageUrl: "/static/photo/tianjinzhiyan.jpg"
-      },
-      {
-        id: "2",
-        name: "五大道",
-        description: '天津最具特色的洋楼建筑群，被誉为"万国建筑博览苑"',
-        imageUrl: "/static/photo/wudadao.jpg"
-      },
-      {
-        id: "3",
-        name: "古文化街",
-        description: "天津老字号店铺和手工艺品集中地，体验津门文化",
-        imageUrl: "/static/photo/guwenhuajie.jpg"
-      },
-      {
-        id: "4",
-        name: "意式风情区",
-        description: "亚洲最大的意式建筑群，感受异国风情",
-        imageUrl: "/static/photo/yishifengqingqu.jpg"
-      },
-      {
-        id: "5",
-        name: "海河",
-        description: "天津的母亲河，两岸风光旖旎，夜景迷人",
-        imageUrl: "/static/photo/haihe.jpg"
-      },
-      {
-        id: "6",
-        name: "瓷房子",
-        description: "用古瓷器装饰的独特建筑，世界建筑史上的奇迹",
-        imageUrl: "/static/photo/cifangzi.jpg"
-      },
-      {
-        id: "7",
-        name: "天津博物馆",
-        description: "展示天津历史文化的重要场所，馆藏丰富",
-        imageUrl: "/static/photo/tianjinbowuguan.jpg"
-      },
-      {
-        id: "8",
-        name: "盘山",
-        description: '天津著名的自然风景区，有"京东第一山"之称',
-        imageUrl: "/static/photo/panshan.jpg"
-      }
-    ]);
-    const page = common_vendor.ref(1);
-    const hasMore = common_vendor.ref(false);
+    const scenicList = common_vendor.ref([]);
+    const loading = common_vendor.ref(false);
+    const hasMore = common_vendor.ref(true);
     const isRefreshing = common_vendor.ref(false);
-    const loadMore = () => {
-      if (hasMore.value) {
-        page.value++;
+    const page = common_vendor.ref(1);
+    const handleDetail = (item) => {
+      try {
+        common_vendor.index.navigateTo({
+          url: `/pages/scenic/scenic?id=${item.id}`
+        });
+      } catch (error) {
+        common_vendor.index.__f__("error", "at pages/index/index.vue:54", "导航失败:", error);
+        common_vendor.index.showToast({
+          title: "打开详情失败",
+          icon: "none"
+        });
       }
     };
-    const onRefresh = async () => {
-      isRefreshing.value = true;
-      setTimeout(() => {
-        isRefreshing.value = false;
-      }, 1e3);
-    };
-    const handleDetail = (item) => {
-      common_vendor.index.navigateTo({
-        url: `/pages/scenic/scenic?id=${item.id}`,
-        success: () => {
-          common_vendor.index.__f__("log", "at pages/index/index.vue:122", "跳转详情页成功", item.id);
-        },
-        fail: (err) => {
-          common_vendor.index.__f__("error", "at pages/index/index.vue:125", "跳转详情页失败", err);
-          common_vendor.index.showToast({
-            title: "跳转失败",
-            icon: "none"
-          });
+    const fetchScenicList = async (pageNum = 1) => {
+      if (loading.value)
+        return;
+      loading.value = true;
+      try {
+        const response = await api_http.http.get("/api/scenic-spots", {
+          params: {
+            // 正确传递GET参数
+            page: pageNum,
+            pageSize
+          }
+        });
+        if (!response || !response.data || !Array.isArray(response.data.data)) {
+          common_vendor.index.__f__("error", "at pages/index/index.vue:78", "无效的数据结构:", response);
+          throw new Error("服务器返回数据格式异常");
         }
-      });
+        const newData = response.data.data.map((item) => ({
+          ...item,
+          imageUrl: item.imageUrl ? api_http.ENV_CONFIG["development"] + item.imageUrl : ""
+        }));
+        scenicList.value = pageNum === 1 ? newData : [...scenicList.value, ...newData];
+        hasMore.value = pageNum * pageSize < response.data.total;
+        if (hasMore.value)
+          page.value = pageNum;
+      } catch (error) {
+        common_vendor.index.showToast({
+          title: error.message || "加载失败",
+          icon: "none",
+          duration: 2e3
+        });
+      } finally {
+        loading.value = false;
+        isRefreshing.value = false;
+      }
     };
-    common_vendor.onMounted(() => {
-    });
+    const loadMore = () => {
+      if (!hasMore.value || loading.value)
+        return;
+      page.value += 1;
+      fetchScenicList(page.value);
+    };
+    const onRefresh = () => {
+      isRefreshing.value = true;
+      fetchScenicList(1);
+    };
+    common_vendor.onMounted(() => fetchScenicList());
     return (_ctx, _cache) => {
       return common_vendor.e({
         a: common_vendor.f(scenicList.value, (item, index, i0) => {

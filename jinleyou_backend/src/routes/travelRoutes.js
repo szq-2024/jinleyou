@@ -6,19 +6,46 @@ import auth from '../middlewares/auth.js';
 const router = express.Router();
 
 // 获取旅行计划
+// 修改获取旅行计划的路由
 router.get('/', async (req, res) => {
     try {
-        const [rows] = await pool.query(`
+        const { dateRange, location, preferences } = req.query;
+        let queryParams = [];
+        let whereClauses = ['tp.date >= CURDATE()'];
+
+        // 处理日期范围
+        if (dateRange) {
+            const [startDate, endDate] = dateRange.split('_');
+            whereClauses.push('tp.date BETWEEN ? AND ?');
+            queryParams.push(startDate, endDate);
+        }
+
+        // 处理地点筛选
+        if (location) {
+            whereClauses.push('tp.destination LIKE ?');
+            queryParams.push(`%${location}%`);
+        }
+
+        // 处理偏好筛选
+        if (preferences) {
+            const prefList = preferences.split(',');
+            whereClauses.push('tp.preference IN (?)');
+            queryParams.push(prefList);
+        }
+
+        const query = `
             SELECT tp.*,
                    u.nickname,
                    u.avatar
             FROM travel_plans tp
-                     JOIN users u ON tp.user_id = u.userId
-            WHERE date >= CURDATE()
-            ORDER BY tp.date ASC`);
+            JOIN users u ON tp.user_id = u.userId
+            WHERE ${whereClauses.join(' AND ')}
+            ORDER BY tp.date ASC`;
 
+        const [rows] = await pool.query(query, queryParams);
         res.json({ code: 200, data: rows });
     } catch (err) {
+        console.error(err);
         res.status(500).json({ code: 500, msg: '服务器错误' });
     }
 });

@@ -8,12 +8,12 @@
 
 		<!-- 注册表单 -->
 		<view class="auth-form">
-			<!-- 用户名输入 -->
+			<!-- 账号输入 -->
 			<view class="form-item" :class="{ error: errors.username }">
 				<uni-icons type="person" size="20" color="#2867CE" />
 				<input 
 					v-model="form.username"
-					placeholder="请输入用户名"
+					placeholder="请输入账号（4到20位数字）"
 					placeholder-class="placeholder"
 					maxlength="20"
 					@focus="resetError('username')"
@@ -53,7 +53,7 @@
 				<uni-icons type="locked" size="20" color="#2867CE" />
 				<input
 					v-model="form.password"
-					placeholder="请输入密码"
+					placeholder="请输入密码（至少6位数字）"
 					placeholder-class="placeholder"
 					:password="!showPassword"
 					maxlength="20"
@@ -96,19 +96,6 @@
 				<text class="link" @click="navigateTo('/pages/login/login')">立即登录</text>
 			</view>
 		</view>
-
-		<!-- 协议声明 -->
-		<view class="agreement">
-			<checkbox-group @change="toggleAgreement">
-				<label>
-					<checkbox :checked="agreed" color="#4cd964" />
-					<text>我已阅读并同意</text>
-				</label>
-			</checkbox-group>
-			<text class="link" @click="showAgreement">《用户协议》</text>
-			<text>和</text>
-			<text class="link" @click="showPrivacy">《隐私政策》</text>
-		</view>
 	</view>
 </template>
 
@@ -132,7 +119,6 @@ export default {
 			captchaProblem: '',
 			captchaAnswer: 0,
 			showPassword: false,
-			agreed: false,
 			loading: false
 		}
 	},
@@ -143,8 +129,7 @@ export default {
 				this.form.phone && 
 				this.form.password && 
 				this.form.captcha &&  
-				!Object.values(this.errors).some(err => err) &&
-				this.agreed
+				!Object.values(this.errors).some(err => err)
 			)
 		}
 	},
@@ -169,12 +154,12 @@ export default {
 		// 验证表单
 		validate() {
 			let valid = true
-			// 用户名验证
+			// 账号验证
 			if (!this.form.username.trim()) {
-				this.errors.username = '请输入用户名'
+				this.errors.username = '请输入账号'
 				valid = false
 			} else if (!/^[\w\u4e00-\u9fa5]{4,20}$/.test(this.form.username)) {
-				this.errors.username = '用户名格式不正确'
+				this.errors.username = '账号格式不正确'
 				valid = false
 			}
 			// 手机号验证
@@ -219,12 +204,6 @@ export default {
 		resetError(field) {
 			this.errors[field] = ''
 		},
-    
-		// 协议勾选
-		toggleAgreement(e) {
-			this.agreed = e.detail.value.length > 0
-		},
-    
 		// 处理注册
 		async handleRegister() {
 			if (!this.validate()) return
@@ -261,17 +240,6 @@ export default {
 			this.loading = false
 		}
     },
-    
-    // 显示协议
-    showAgreement() {
-		uni.navigateTo({ url: '/pages/webview?url=' + encodeURIComponent('https://localhost:3000/agreement') })
-    },
-    
-    // 显示隐私政策
-    showPrivacy() {
-		uni.navigateTo({ url: '/pages/webview?url=' + encodeURIComponent('https://localhost:3000/privacy') })
-    },
-    
     // 通用跳转
     navigateTo(url) {
 		uni.navigateTo({ url })
@@ -384,26 +352,6 @@ export default {
 		.refresh-icon {
 			padding: 10rpx;
 			margin-left: 10rpx;
-		}
-	}
-  
-	.agreement {
-		margin-top: auto;
-		padding-top: 40rpx;
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: center;
-		align-items: center;
-		font-size: 24rpx;
-		color: #999;
-    
-		checkbox {
-			transform: scale(0.8);
-		}
-    
-		.link {
-			color: #2867CE;
-			margin: 0 5rpx;
 		}
 	}
 }

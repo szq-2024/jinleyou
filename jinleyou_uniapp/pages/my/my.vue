@@ -26,7 +26,7 @@
         <uni-icons type="arrowright" size="16" color="#999" />
       </view>
 
-      <view class="menu-item" @click="handleNavigate('/pages/my/my_comments')">
+      <view class="menu-item" @click="handleNavigate('/pages/my/my_review')">
         <view class="item-content">
           <uni-icons type="chatboxes-filled" size="20" color="#007aff" />
           <text>我的评论</text>
@@ -51,7 +51,7 @@
 	  <uni-icons type="arrowright" size="16" color="#999" />
 	</view>
 	
-      <view class="menu-item" @click="handleNavigate('/pages/my/settings')">
+      <view class="menu-item" @click="handleNavigate('/pages/my/setting')">
         <view class="item-content">
           <uni-icons type="gear-filled" size="20" color="#808080" />
           <text>设置</text>
@@ -201,14 +201,17 @@ export default {
         content: '确定要退出登录吗？',
         success: (res) => {
           if (res.confirm) {
-            this.CLEAR_ALL();
-            uni.removeStorageSync('token');
+            // 清除用户信息和token
+            uni.removeStorageSync('token')
+            uni.removeStorageSync('userInfo')
+            
+            // 跳转到登录页面
             uni.redirectTo({
               url: '/pages/login/login'
-            });
+            })
           }
-        },
-      });
+        }
+      })
     }
   }
 }

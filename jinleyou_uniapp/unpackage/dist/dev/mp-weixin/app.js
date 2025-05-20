@@ -6,7 +6,7 @@ const store_index = require("./store/index.js");
 if (!Math) {
   "./pages/login/login.js";
   "./pages/register/index.js";
-  "./pages/forgot-password/index.js";
+  "./pages/forgot-password/forgot-password.js";
   "./pages/index/index.js";
   "./pages/partner/index.js";
   "./pages/partner/create-plans.js";
@@ -15,11 +15,13 @@ if (!Math) {
   "./pages/guide/guide.js";
   "./pages/my/my.js";
   "./pages/scenic/scenic.js";
+  "./pages/review/review.js";
   "./pages/my/my_messages.js";
-  "./pages/my/my_comments.js";
+  "./pages/my/my_review.js";
   "./pages/my/my_trips.js";
   "./pages/my/my_services.js";
   "./pages/my/setting.js";
+  "./pages/my/change_password.js";
   "./pages/my/edit_profile.js";
 }
 const _sfc_main = {

@@ -125,8 +125,8 @@ const _sfc_main = {
         content: "确定要退出登录吗？",
         success: (res) => {
           if (res.confirm) {
-            this.CLEAR_ALL();
             common_vendor.index.removeStorageSync("token");
+            common_vendor.index.removeStorageSync("userInfo");
             common_vendor.index.redirectTo({
               url: "/pages/login/login"
             });
@@ -180,7 +180,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       size: "16",
       color: "#999"
     }),
-    l: common_vendor.o(($event) => $options.handleNavigate("/pages/my/my_comments")),
+    l: common_vendor.o(($event) => $options.handleNavigate("/pages/my/my_review")),
     m: common_vendor.p({
       type: "calendar-filled",
       size: "20",
@@ -213,7 +213,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       size: "16",
       color: "#999"
     }),
-    v: common_vendor.o(($event) => $options.handleNavigate("/pages/my/settings")),
+    v: common_vendor.o(($event) => $options.handleNavigate("/pages/my/setting")),
     w: common_vendor.o((...args) => $options.logout && $options.logout(...args)),
     x: common_vendor.gei(_ctx, "")
   });

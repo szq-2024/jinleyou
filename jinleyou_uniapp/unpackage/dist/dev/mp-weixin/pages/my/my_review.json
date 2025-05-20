@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "我的评论",
+  "usingComponents": {
+    "card-list": "../../components/CardList",
+    "empty-state": "../../components/EmptyState",
+    "loading-overlay": "../../components/LoadingOverlay"
+  }
+}

@@ -20,13 +20,12 @@ const _sfc_main = {
       captchaProblem: "",
       captchaAnswer: 0,
       showPassword: false,
-      agreed: false,
       loading: false
     };
   },
   computed: {
     formValid() {
-      return this.form.username && this.form.phone && this.form.password && this.form.captcha && !Object.values(this.errors).some((err) => err) && this.agreed;
+      return this.form.username && this.form.phone && this.form.password && this.form.captcha && !Object.values(this.errors).some((err) => err);
     }
   },
   created() {
@@ -50,10 +49,10 @@ const _sfc_main = {
     validate() {
       let valid = true;
       if (!this.form.username.trim()) {
-        this.errors.username = "请输入用户名";
+        this.errors.username = "请输入账号";
         valid = false;
       } else if (!/^[\w\u4e00-\u9fa5]{4,20}$/.test(this.form.username)) {
-        this.errors.username = "用户名格式不正确";
+        this.errors.username = "账号格式不正确";
         valid = false;
       }
       if (!this.form.phone) {
@@ -93,10 +92,6 @@ const _sfc_main = {
     resetError(field) {
       this.errors[field] = "";
     },
-    // 协议勾选
-    toggleAgreement(e) {
-      this.agreed = e.detail.value.length > 0;
-    },
     // 处理注册
     async handleRegister() {
       var _a, _b;
@@ -124,7 +119,7 @@ const _sfc_main = {
           common_vendor.index.showToast({ title: message, icon: "none" });
         }
       } catch (error) {
-        common_vendor.index.__f__("error", "at pages/register/index.vue:255", "注册失败:", error);
+        common_vendor.index.__f__("error", "at pages/register/index.vue:234", "注册失败:", error);
         common_vendor.index.showToast({
           title: "网络错误，请稍后重试",
           icon: "none"
@@ -132,14 +127,6 @@ const _sfc_main = {
       } finally {
         this.loading = false;
       }
-    },
-    // 显示协议
-    showAgreement() {
-      common_vendor.index.navigateTo({ url: "/pages/webview?url=" + encodeURIComponent("https://localhost:3000/agreement") });
-    },
-    // 显示隐私政策
-    showPrivacy() {
-      common_vendor.index.navigateTo({ url: "/pages/webview?url=" + encodeURIComponent("https://localhost:3000/privacy") });
     },
     // 通用跳转
     navigateTo(url) {
@@ -257,11 +244,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     X: !$options.formValid || $data.loading,
     Y: common_vendor.o((...args) => $options.handleRegister && $options.handleRegister(...args)),
     Z: common_vendor.o(($event) => $options.navigateTo("/pages/login/login")),
-    aa: $data.agreed,
-    ab: common_vendor.o((...args) => $options.toggleAgreement && $options.toggleAgreement(...args)),
-    ac: common_vendor.o((...args) => $options.showAgreement && $options.showAgreement(...args)),
-    ad: common_vendor.o((...args) => $options.showPrivacy && $options.showPrivacy(...args)),
-    ae: common_vendor.gei(_ctx, "")
+    aa: common_vendor.gei(_ctx, "")
   });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-46a64346"]]);

@@ -10,7 +10,7 @@
 		    "style": { "navigationBarTitleText": "注册" }
 		},
 		{
-		    "path": "pages/forgot-password/index",
+		    "path": "pages/forgot-password/forgot-password",
 		    "style": { "navigationBarTitleText": "忘记密码" }
 		},
 		{
@@ -68,11 +68,18 @@
 			}
 		},
 		{
+			"path" : "pages/review/review",
+			"style" : 
+			{
+				"navigationBarTitleText" : "发布评价"
+			}
+		},
+		{
 		    "path": "pages/my/my_messages",
 		    "style": { "navigationBarTitleText": "我的消息" }
 		},
 		{
-		    "path": "pages/my/my_comments",
+		    "path": "pages/my/my_review",
 		    "style": { "navigationBarTitleText": "我的评论" }
 		},
 		{
@@ -86,6 +93,10 @@
 		{
 		    "path": "pages/my/setting",
 		    "style": { "navigationBarTitleText": "设置" }
+		},
+		{
+		    "path": "pages/my/change_password",
+		    "style": { "navigationBarTitleText": "修改密码" }
 		},
 		{
 		    "path": "pages/my/edit_profile",

@@ -15,13 +15,12 @@ const _sfc_main = {
       },
       showPassword: false,
       rememberMe: false,
-      agreed: true,
       loading: false
     };
   },
   computed: {
     formValid() {
-      return this.form.username && this.form.password && !this.errors.username && !this.errors.password && this.agreed;
+      return this.form.username && this.form.password && !this.errors.username && !this.errors.password;
     }
   },
   onLoad() {
@@ -42,10 +41,10 @@ const _sfc_main = {
       let valid = true;
       const { username, password } = this.form;
       if (!username.trim()) {
-        this.errors.username = "请输入用户名/手机号";
+        this.errors.username = "请输入账号/手机号";
         valid = false;
       } else if (!/^[\w\u4e00-\u9fa5]{3,20}$/.test(username)) {
-        this.errors.username = "用户名格式不正确";
+        this.errors.username = "账号格式不正确";
         valid = false;
       }
       if (!password) {
@@ -65,10 +64,6 @@ const _sfc_main = {
     toggleRemember(e) {
       this.rememberMe = e.detail.value.length > 0;
     },
-    // 协议勾选
-    toggleAgreement(e) {
-      this.agreed = e.detail.value.length > 0;
-    },
     // 处理登录
     async handleLogin() {
       if (!this.validate())
@@ -79,7 +74,6 @@ const _sfc_main = {
           account: this.form.username,
           password: this.form.password
         });
-        common_vendor.index.__f__("log", "at pages/login/login.vue:190", "🔍 完整响应结构:", JSON.stringify(res, null, 2));
         common_vendor.index.setStorageSync("token", res.data.token);
         this.SET_INFO(res.data.user);
         common_vendor.index.setStorageSync("userId", res.data.user.userId);
@@ -95,10 +89,10 @@ const _sfc_main = {
             common_vendor.index.switchTab({
               url: "/pages/index/index",
               success: () => {
-                common_vendor.index.__f__("log", "at pages/login/login.vue:212", "路由跳转成功");
+                common_vendor.index.__f__("log", "at pages/login/login.vue:174", "路由跳转成功");
               },
               fail: (err) => {
-                common_vendor.index.__f__("error", "at pages/login/login.vue:215", "路由跳转失败:", err);
+                common_vendor.index.__f__("error", "at pages/login/login.vue:177", "路由跳转失败:", err);
                 common_vendor.index.reLaunch({
                   url: "/pages/index/index"
                 });
@@ -119,18 +113,6 @@ const _sfc_main = {
       } finally {
         this.loading = false;
       }
-    },
-    // 微信登录
-    onWechatLogin(e) {
-      common_vendor.index.__f__("log", "at pages/login/login.vue:245", "微信登录:", e);
-    },
-    // 显示协议
-    showAgreement() {
-      common_vendor.index.navigateTo({ url: "/pages/webview?url=" + encodeURIComponent("https://localhost:3000/agreement") });
-    },
-    // 显示隐私政策
-    showPrivacy() {
-      common_vendor.index.navigateTo({ url: "/pages/webview?url=" + encodeURIComponent("https://localhost:3000/privacy") });
     },
     // 通用跳转
     navigateTo(url) {
@@ -186,7 +168,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   } : {}, {
     s: $data.rememberMe,
     t: common_vendor.o((...args) => $options.toggleRemember && $options.toggleRemember(...args)),
-    v: common_vendor.o(($event) => $options.navigateTo("/pages/forgot-password/index")),
+    v: common_vendor.o(($event) => $options.navigateTo("/pages/forgot-password/forgot-password")),
     w: !$data.loading
   }, !$data.loading ? {} : {
     x: common_vendor.p({
@@ -198,17 +180,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     z: !$options.formValid || $data.loading,
     A: common_vendor.o((...args) => $options.handleLogin && $options.handleLogin(...args)),
     B: common_vendor.o(($event) => $options.navigateTo("/pages/register/index")),
-    C: common_vendor.p({
-      type: "weixin",
-      size: "24",
-      color: "#09BB07"
-    }),
-    D: common_vendor.o((...args) => $options.onWechatLogin && $options.onWechatLogin(...args)),
-    E: $data.agreed,
-    F: common_vendor.o((...args) => $options.toggleAgreement && $options.toggleAgreement(...args)),
-    G: common_vendor.o((...args) => $options.showAgreement && $options.showAgreement(...args)),
-    H: common_vendor.o((...args) => $options.showPrivacy && $options.showPrivacy(...args)),
-    I: common_vendor.gei(_ctx, "")
+    C: common_vendor.gei(_ctx, "")
   });
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-e4e4508d"]]);

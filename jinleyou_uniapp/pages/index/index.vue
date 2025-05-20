@@ -36,107 +36,90 @@
 </template>
 
 <script setup>
-	
-import { onLoad } from '@dcloudio/uni-app'
-import { ref, onMounted } from 'vue'
-
-// 景点列表数据
-const scenicList = ref([
-  {
-    id: '1',
-    name: '天津之眼',
-    description: '世界上唯一建在桥上的摩天轮，天津地标性建筑',
-    imageUrl: '/static/photo/tianjinzhiyan.jpg'
-  },
-  {
-    id: '2',
-    name: '五大道',
-    description: '天津最具特色的洋楼建筑群，被誉为"万国建筑博览苑"',
-    imageUrl: '/static/photo/wudadao.jpg'
-  },
-  {
-    id: '3',
-    name: '古文化街',
-    description: '天津老字号店铺和手工艺品集中地，体验津门文化',
-    imageUrl: '/static/photo/guwenhuajie.jpg'
-  },
-  {
-    id: '4',
-    name: '意式风情区',
-    description: '亚洲最大的意式建筑群，感受异国风情',
-    imageUrl: '/static/photo/yishifengqingqu.jpg'
-  },
-  {
-    id: '5',
-    name: '海河',
-    description: '天津的母亲河，两岸风光旖旎，夜景迷人',
-    imageUrl: '/static/photo/haihe.jpg'
-  },
-  {
-    id: '6',
-    name: '瓷房子',
-    description: '用古瓷器装饰的独特建筑，世界建筑史上的奇迹',
-    imageUrl: '/static/photo/cifangzi.jpg'
-  },
-  {
-    id: '7',
-    name: '天津博物馆',
-    description: '展示天津历史文化的重要场所，馆藏丰富',
-    imageUrl: '/static/photo/tianjinbowuguan.jpg'
-  },
-  {
-    id: '8',
-    name: '盘山',
-    description: '天津著名的自然风景区，有"京东第一山"之称',
-    imageUrl: '/static/photo/panshan.jpg'
+import { ref, onMounted } from 'vue';
+import { http, ENV_CONFIG } from '@/api/http';
+// 状态定义
+const scenicList = ref([]);
+const loading = ref(false);
+const hasMore = ref(true);         // 新增分页控制
+const isRefreshing = ref(false);   // 新增下拉刷新状态
+const page = ref(1);               // 新增页码控制
+const pageSize = 10;               // 每页数量
+const handleDetail = (item) => {
+  try {
+    uni.navigateTo({
+      url: `/pages/scenic/scenic?id=${item.id}`
+    });
+  } catch (error) {
+    console.error('导航失败:', error);
+    uni.showToast({
+      title: '打开详情失败',
+      icon: 'none'
+    });
   }
-])
+};
+// 获取景点列表（带分页参数）
+// 在script部分修改fetch逻辑
+const fetchScenicList = async (pageNum = 1) => {
+  if (loading.value) return;
+  loading.value = true;
+  
+  try {
+    // 使用封装好的http.get方法，参数通过params传递
+    const response = await http.get('/api/scenic-spots', {
+      params: { // 正确传递GET参数
+        page: pageNum,
+        pageSize: pageSize
+      }
+    });
 
-// 分页相关
-const page = ref(1)
-const hasMore = ref(false)
-const isRefreshing = ref(false)
+    // 校验响应数据结构
+    if (!response || !response.data || !Array.isArray(response.data.data)) {
+      console.error('无效的数据结构:', response);
+      throw new Error('服务器返回数据格式异常');
+    }
+
+    const newData = response.data.data.map(item => ({
+      ...item,
+      imageUrl: item.imageUrl ? ENV_CONFIG[process.env.NODE_ENV] + item.imageUrl : ''
+    }));
+
+    // 更新列表和分页状态
+    scenicList.value = pageNum === 1 
+      ? newData 
+      : [...scenicList.value, ...newData];
+    
+    hasMore.value = (pageNum * pageSize) < response.data.total;
+    if (hasMore.value) page.value = pageNum;
+
+  } catch (error) {
+    uni.showToast({ 
+      title: error.message || '加载失败',
+      icon: 'none',
+      duration: 2000
+    });
+  } finally {
+    loading.value = false;
+    isRefreshing.value = false;
+  }
+};
 
 // 加载更多
 const loadMore = () => {
-  if (hasMore.value) {
-    page.value++
-    // TODO: 加载更多数据
-  }
-}
+  if (!hasMore.value || loading.value) return;
+  page.value += 1; // 先递增页码
+  fetchScenicList(page.value);
+};
 
 // 下拉刷新
-const onRefresh = async () => {
-  isRefreshing.value = true
-  // TODO: 刷新数据
-  setTimeout(() => {
-    isRefreshing.value = false
-  }, 1000)
-}
+const onRefresh = () => {
+  isRefreshing.value = true;
+  fetchScenicList(1); // 刷新时重置到第一页
+};
 
-// 查看详情
-const handleDetail = (item) => {
-  uni.navigateTo({
-    url: `/pages/scenic/scenic?id=${item.id}`,
-    success: () => {
-      console.log('跳转详情页成功', item.id);
-    },
-    fail: (err) => {
-      console.error('跳转详情页失败', err);
-      uni.showToast({
-        title: '跳转失败',
-        icon: 'none'
-      });
-    }
-  });
-}
-
-// 页面加载
-onMounted(() => {
-  // TODO: 获取景点列表数据
-})
+// 初始化加载
+onMounted(() => fetchScenicList());
 </script>
-
 
 
 <style lang="scss">

@@ -1,9 +1,10 @@
 import express from 'express';
-import { register, login } from '../controllers/authController.js'; // 必须带扩展名
+import { register, login, resetPassword, changePassword } from '../controllers/authController.js';
 
 const router = express.Router();
 
 router.post('/register', register);
 router.post('/login', login);
-
-export default router; // 使用默认导出
+router.post('/reset-password', resetPassword);
+router.post('/change-password', changePassword);
+export default router;

@@ -9,7 +9,7 @@ const _sfc_main = {
     },
     type: {
       type: String,
-      validator: (value) => ["plan", "guide"].includes(value)
+      validator: (value) => ["plans", "guides", "review"].includes(value)
     },
     showDelete: {
       type: Boolean,
@@ -20,7 +20,8 @@ const _sfc_main = {
   setup(__props, { emit: __emit }) {
     const typeMap = {
       plan: "旅行计划",
-      guide: "导游服务"
+      guide: "导游服务",
+      review: "用户评论"
     };
     const emit = __emit;
     const handleClick = (item) => {
@@ -36,24 +37,47 @@ const _sfc_main = {
             d: common_vendor.t(item.destination),
             e: common_vendor.t(item.preference),
             f: common_vendor.t(item.description)
-          } : common_vendor.e({
+          } : {}, __props.type === "guide" ? common_vendor.e({
             g: common_vendor.t(typeMap[__props.type]),
-            h: common_vendor.t(item.destination),
-            i: common_vendor.t(item.type),
-            j: common_vendor.t(item.price),
-            k: common_vendor.t(item.description),
-            l: __props.showDelete
+            h: common_vendor.t(common_vendor.unref(common_vendor.dayjs)(item.serviceDate).format("YYYY-MM-DD")),
+            i: common_vendor.t(item.destination),
+            j: common_vendor.t(item.type),
+            k: common_vendor.t(item.duration),
+            l: common_vendor.t(item.price),
+            m: common_vendor.t(item.description),
+            n: __props.showDelete
           }, __props.showDelete ? {
-            m: common_vendor.o(($event) => _ctx.$emit("delete", item), index)
+            o: common_vendor.o(($event) => _ctx.$emit("delete", item), index)
           } : {
-            n: common_vendor.o(($event) => _ctx.$emit("chat", item), index)
-          }), {
-            o: index,
-            p: common_vendor.o(($event) => handleClick(item), index)
+            p: common_vendor.o(($event) => _ctx.$emit("chat", item), index)
+          }) : {}, __props.type === "review" ? common_vendor.e({
+            q: item.avatar,
+            r: common_vendor.t(item.nickname),
+            s: __props.showDelete
+          }, __props.showDelete ? {
+            t: common_vendor.o(($event) => _ctx.$emit("delete", item), index)
+          } : {}, {
+            v: common_vendor.t(item.scenicName),
+            w: common_vendor.t(item.content),
+            x: item.images && item.images.length
+          }, item.images && item.images.length ? {
+            y: common_vendor.f(item.images, (img, idx, i1) => {
+              return {
+                a: idx,
+                b: img
+              };
+            })
+          } : {}, {
+            z: common_vendor.t(common_vendor.unref(common_vendor.dayjs)(item.createdAt).format("YYYY-MM-DD"))
+          }) : {}, {
+            A: index,
+            B: common_vendor.o(($event) => handleClick(item), index)
           });
         }),
         b: __props.type === "plan",
-        c: common_vendor.gei(_ctx, "")
+        c: __props.type === "guide",
+        d: __props.type === "review",
+        e: common_vendor.gei(_ctx, "")
       };
     };
   }

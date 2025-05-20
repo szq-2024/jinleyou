@@ -3,78 +3,75 @@ const common_vendor = require("../../common/vendor.js");
 const _sfc_main = {
   data() {
     return {
-      notificationEnabled: true,
-      cacheSize: "12.5MB",
-      appVersion: "1.0.0"
+      locationPermission: "unknown"
     };
   },
-  onLoad() {
-    this.getAppInfo();
+  onShow() {
+    this.checkPermissionStatus();
   },
   methods: {
-    // 返回上一页
-    goBack() {
-      common_vendor.index.navigateBack();
+    async checkPermissionStatus() {
+      try {
+        const res = await common_vendor.index.getSetting();
+        const status = res.authSetting["scope.userLocation"];
+        this.locationPermission = status ? "authorized" : "denied";
+      } catch (e) {
+        common_vendor.index.__f__("error", "at pages/my/setting.vue:63", "获取权限状态失败:", e);
+        this.locationPermission = "unknown";
+      }
     },
-    // 通用跳转方法
+    async handleSwitchChange(e) {
+      const isOn = e.detail.value;
+      if (isOn) {
+        try {
+          await common_vendor.index.authorize({ scope: "scope.userLocation" });
+          this.locationPermission = "authorized";
+          common_vendor.index.showToast({ title: "定位权限已开启", icon: "success" });
+        } catch (error) {
+          common_vendor.index.showModal({
+            title: "位置权限申请",
+            content: "需要位置权限来提供应急导航服务，请前往设置开启",
+            confirmText: "立即开启",
+            success: async (res) => {
+              if (res.confirm) {
+                const { authSetting } = await common_vendor.index.openSetting();
+                if (authSetting["scope.userLocation"]) {
+                  this.locationPermission = "authorized";
+                  common_vendor.index.showToast({ title: "权限已开启", icon: "success" });
+                } else {
+                  this.locationPermission = "denied";
+                }
+              }
+            }
+          });
+        }
+      } else {
+        common_vendor.index.showModal({
+          title: "关闭定位权限",
+          content: "需要到系统设置中关闭定位权限，是否立即前往？",
+          confirmText: "前往设置",
+          success: async (res) => {
+            if (res.confirm) {
+              await common_vendor.index.openSetting();
+              this.checkPermissionStatus();
+            }
+          }
+        });
+      }
+    },
     navigateTo(url) {
       common_vendor.index.navigateTo({ url });
     },
-    // 获取应用信息
-    getAppInfo() {
-      const accountInfo = common_vendor.index.getAccountInfoSync();
-      this.appVersion = accountInfo.miniProgram.version || "1.0.0";
-      this.cacheSize = this.calculateCacheSize();
+    goBack() {
+      common_vendor.index.navigateBack();
     },
-    // 计算缓存大小（模拟）
-    calculateCacheSize() {
-      const size = Math.random() * 10 + 5;
-      return size.toFixed(1) + "MB";
-    },
-    // 切换通知设置
-    toggleNotification(e) {
-      this.notificationEnabled = e.detail.value;
-      common_vendor.index.showToast({
-        title: this.notificationEnabled ? "已开启通知" : "已关闭通知",
-        icon: "none"
-      });
-    },
-    // 检查更新
-    checkUpdate() {
-      common_vendor.index.showLoading({ title: "检查中..." });
-      setTimeout(() => {
-        common_vendor.index.hideLoading();
-        common_vendor.index.showModal({
-          title: "提示",
-          content: "当前已是最新版本",
-          showCancel: false
-        });
-      }, 1e3);
-    },
-    // 显示用户协议
-    showAgreement() {
-      common_vendor.index.navigateTo({
-        url: "/pages/webview?url=" + encodeURIComponent("https://yourdomain.com/agreement")
-      });
-    },
-    // 显示隐私政策
-    showPrivacy() {
-      common_vendor.index.navigateTo({
-        url: "/pages/webview?url=" + encodeURIComponent("https://yourdomain.com/privacy")
-      });
-    },
-    // 退出登录
     logout() {
       common_vendor.index.showModal({
-        title: "提示",
-        content: "确定要退出登录吗？",
+        title: "确认退出",
+        content: "确定要退出当前账号吗？",
         success: (res) => {
           if (res.confirm) {
-            common_vendor.index.removeStorageSync("token");
-            common_vendor.index.removeStorageSync("userInfo");
-            common_vendor.index.redirectTo({
-              url: "/pages/auth/login"
-            });
+            common_vendor.index.reLaunch({ url: "/pages/login/login" });
           }
         }
       });
@@ -98,7 +95,7 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       color: "#333"
     }),
     c: common_vendor.p({
-      type: "person",
+      type: "locked",
       size: "20",
       color: "#666"
     }),
@@ -107,84 +104,16 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       size: "16",
       color: "#ccc"
     }),
-    e: common_vendor.o(($event) => $options.navigateTo("/pages/my/edit-profile")),
+    e: common_vendor.o(($event) => $options.navigateTo("/pages/my/change_password")),
     f: common_vendor.p({
-      type: "locked",
+      type: "location",
       size: "20",
       color: "#666"
     }),
-    g: common_vendor.p({
-      type: "arrowright",
-      size: "16",
-      color: "#ccc"
-    }),
-    h: common_vendor.o(($event) => $options.navigateTo("/pages/my/change-password")),
-    i: common_vendor.p({
-      type: "sound",
-      size: "20",
-      color: "#666"
-    }),
-    j: $data.notificationEnabled,
-    k: common_vendor.o((...args) => $options.toggleNotification && $options.toggleNotification(...args)),
-    l: common_vendor.p({
-      type: "trash",
-      size: "20",
-      color: "#666"
-    }),
-    m: common_vendor.t($data.cacheSize),
-    n: common_vendor.p({
-      type: "arrowright",
-      size: "16",
-      color: "#ccc"
-    }),
-    o: common_vendor.o(($event) => $options.navigateTo("/pages/my/clear-cache")),
-    p: common_vendor.p({
-      type: "download",
-      size: "20",
-      color: "#666"
-    }),
-    q: common_vendor.t($data.appVersion),
-    r: common_vendor.p({
-      type: "arrowright",
-      size: "16",
-      color: "#ccc"
-    }),
-    s: common_vendor.o((...args) => $options.checkUpdate && $options.checkUpdate(...args)),
-    t: common_vendor.p({
-      type: "info",
-      size: "20",
-      color: "#666"
-    }),
-    v: common_vendor.p({
-      type: "arrowright",
-      size: "16",
-      color: "#ccc"
-    }),
-    w: common_vendor.o(($event) => $options.navigateTo("/pages/my/about-us")),
-    x: common_vendor.p({
-      type: "paperclip",
-      size: "20",
-      color: "#666"
-    }),
-    y: common_vendor.p({
-      type: "arrowright",
-      size: "16",
-      color: "#ccc"
-    }),
-    z: common_vendor.o((...args) => $options.showAgreement && $options.showAgreement(...args)),
-    A: common_vendor.p({
-      type: "eye",
-      size: "20",
-      color: "#666"
-    }),
-    B: common_vendor.p({
-      type: "arrowright",
-      size: "16",
-      color: "#ccc"
-    }),
-    C: common_vendor.o((...args) => $options.showPrivacy && $options.showPrivacy(...args)),
-    D: common_vendor.o((...args) => $options.logout && $options.logout(...args)),
-    E: common_vendor.gei(_ctx, "")
+    g: $data.locationPermission === "authorized",
+    h: common_vendor.o((...args) => $options.handleSwitchChange && $options.handleSwitchChange(...args)),
+    i: common_vendor.o((...args) => $options.logout && $options.logout(...args)),
+    j: common_vendor.gei(_ctx, "")
   };
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-5fad43a3"]]);

@@ -7,6 +7,29 @@ const router = express.Router();
 // 获取导游服务列表
 router.get('/', async (req, res) => {
     try {
+        const { dateStart, dateEnd, destination, type } = req.query;
+        let queryParams = [];
+        let whereClauses = ['gs.service_date >= CURDATE()'];
+
+        // 处理日期范围
+        if (dateStart && dateEnd) {
+            whereClauses.push('gs.service_date BETWEEN ? AND ?');
+            queryParams.push(dateStart, dateEnd);
+        }
+
+        // 处理目的地筛选
+        if (destination) {
+            whereClauses.push('gs.destination LIKE ?');
+            queryParams.push(`%${destination}%`);
+        }
+
+        // 处理服务类型筛选
+        if (type) {
+            const types = type.split(',');
+            whereClauses.push('gs.type IN (?)');
+            queryParams.push(types);
+        }
+
         const query = `
             SELECT gs.*,
                    u.userId AS user_id,
@@ -15,10 +38,11 @@ router.get('/', async (req, res) => {
                    u.gender,
                    DATE_FORMAT(gs.service_date, '%Y-%m-%d') as service_date  
             FROM guide_services gs
-                JOIN users u ON gs.user_id = u.userId
+            JOIN users u ON gs.user_id = u.userId
+            ${whereClauses.length ? 'WHERE ' + whereClauses.join(' AND ') : ''}
             ORDER BY gs.created_at DESC`;
 
-        const [results] = await pool.query(query);
+        const [results] = await pool.query(query, queryParams);
 
         const transformed = results.map(item => ({
             id: item.id,

@@ -1,25 +1,16 @@
 <template>
   <view class="settings-container">
-    <!-- 顶部导航栏 -->
+    <!-- 简化后的导航栏 -->
     <view class="nav-bar">
       <uni-icons type="arrowleft" size="24" color="#333" @click="goBack" />
-      <text class="title">设置</text>
-      <view class="right-placeholder"></view>
+      <view class="right-placeholder" />
     </view>
 
     <!-- 设置列表 -->
     <view class="settings-list">
       <!-- 账号设置 -->
       <view class="section-title">账号设置</view>
-      <view class="setting-item" @click="navigateTo('/pages/my/edit-profile')">
-        <view class="item-left">
-          <uni-icons type="person" size="20" color="#666" />
-          <text>个人资料</text>
-        </view>
-        <uni-icons type="arrowright" size="16" color="#ccc" />
-      </view>
-
-      <view class="setting-item" @click="navigateTo('/pages/my/change-password')">
+      <view class="setting-item" @click="navigateTo('/pages/my/change_password')">
         <view class="item-left">
           <uni-icons type="locked" size="20" color="#666" />
           <text>修改密码</text>
@@ -27,68 +18,25 @@
         <uni-icons type="arrowright" size="16" color="#ccc" />
       </view>
 
-      <!-- 通知设置 -->
-      <view class="section-title">通知设置</view>
+      <!-- 权限管理 -->
+      <view class="section-title">权限管理</view>
       <view class="setting-item">
         <view class="item-left">
-          <uni-icons type="sound" size="20" color="#666" />
-          <text>消息通知</text>
-        </view>
-        <switch :checked="notificationEnabled" @change="toggleNotification" />
-      </view>
-
-      <!-- 通用设置 -->
-      <view class="section-title">通用设置</view>
-      <view class="setting-item" @click="navigateTo('/pages/my/clear-cache')">
-        <view class="item-left">
-          <uni-icons type="trash" size="20" color="#666" />
-          <text>清除缓存</text>
+          <uni-icons type="location" size="20" color="#666" />
+          <text>定位权限</text>
         </view>
         <view class="item-right">
-          <text class="cache-size">{{ cacheSize }}</text>
-          <uni-icons type="arrowright" size="16" color="#ccc" />
+          <switch 
+            :checked="locationPermission === 'authorized'" 
+            @change="handleSwitchChange"
+            color="#2867CE"
+            class="permission-switch"
+          />
         </view>
-      </view>
-
-      <view class="setting-item" @click="checkUpdate">
-        <view class="item-left">
-          <uni-icons type="download" size="20" color="#666" />
-          <text>检查更新</text>
-        </view>
-        <view class="item-right">
-          <text class="version">v{{ appVersion }}</text>
-          <uni-icons type="arrowright" size="16" color="#ccc" />
-        </view>
-      </view>
-
-      <!-- 关于我们 -->
-      <view class="section-title">关于</view>
-      <view class="setting-item" @click="navigateTo('/pages/my/about-us')">
-        <view class="item-left">
-          <uni-icons type="info" size="20" color="#666" />
-          <text>关于我们</text>
-        </view>
-        <uni-icons type="arrowright" size="16" color="#ccc" />
-      </view>
-
-      <view class="setting-item" @click="showAgreement">
-        <view class="item-left">
-          <uni-icons type="paperclip" size="20" color="#666" />
-          <text>用户协议</text>
-        </view>
-        <uni-icons type="arrowright" size="16" color="#ccc" />
-      </view>
-
-      <view class="setting-item" @click="showPrivacy">
-        <view class="item-left">
-          <uni-icons type="eye" size="20" color="#666" />
-          <text>隐私政策</text>
-        </view>
-        <uni-icons type="arrowright" size="16" color="#ccc" />
       </view>
     </view>
 
-    <!-- 退出登录按钮 -->
+    <!-- 退出登录 -->
     <view class="logout-btn">
       <button @click="logout">退出登录</button>
     </view>
@@ -99,94 +47,79 @@
 export default {
   data() {
     return {
-      notificationEnabled: true,
-      cacheSize: '12.5MB',
-      appVersion: '1.0.0'
+      locationPermission: 'unknown'
     }
   },
-  onLoad() {
-    this.getAppInfo()
+  onShow() {
+    this.checkPermissionStatus()
   },
   methods: {
-    // 返回上一页
-    goBack() {
-      uni.navigateBack()
+    async checkPermissionStatus() {
+      try {
+        const res = await uni.getSetting()
+        const status = res.authSetting['scope.userLocation']
+        this.locationPermission = status ? 'authorized' : 'denied'
+      } catch (e) {
+        console.error('获取权限状态失败:', e)
+        this.locationPermission = 'unknown'
+      }
     },
-    
-    // 通用跳转方法
+
+    async handleSwitchChange(e) {
+      const isOn = e.detail.value
+      if (isOn) {
+        try {
+          await uni.authorize({ scope: 'scope.userLocation' })
+          this.locationPermission = 'authorized'
+          uni.showToast({ title: '定位权限已开启', icon: 'success' })
+        } catch (error) {
+          uni.showModal({
+            title: '位置权限申请',
+            content: '需要位置权限来提供应急导航服务，请前往设置开启',
+            confirmText: '立即开启',
+            success: async (res) => {
+              if (res.confirm) {
+                const { authSetting } = await uni.openSetting()
+                if (authSetting['scope.userLocation']) {
+                  this.locationPermission = 'authorized'
+                  uni.showToast({ title: '权限已开启', icon: 'success' })
+                } else {
+                  this.locationPermission = 'denied'
+                }
+              }
+            }
+          })
+        }
+      } else {
+        uni.showModal({
+          title: '关闭定位权限',
+          content: '需要到系统设置中关闭定位权限，是否立即前往？',
+          confirmText: '前往设置',
+          success: async (res) => {
+            if (res.confirm) {
+              await uni.openSetting()
+              this.checkPermissionStatus()
+            }
+          }
+        })
+      }
+    },
+
     navigateTo(url) {
       uni.navigateTo({ url })
     },
-    
-    // 获取应用信息
-    getAppInfo() {
-      // 获取版本号
-      const accountInfo = uni.getAccountInfoSync()
-      this.appVersion = accountInfo.miniProgram.version || '1.0.0'
-      
-      // 获取缓存大小（模拟）
-      this.cacheSize = this.calculateCacheSize()
+
+    goBack() {
+      uni.navigateBack()
     },
-    
-    // 计算缓存大小（模拟）
-    calculateCacheSize() {
-      const size = Math.random() * 10 + 5
-      return size.toFixed(1) + 'MB'
-    },
-    
-    // 切换通知设置
-    toggleNotification(e) {
-      this.notificationEnabled = e.detail.value
-      uni.showToast({
-        title: this.notificationEnabled ? '已开启通知' : '已关闭通知',
-        icon: 'none'
-      })
-    },
-    
-    // 检查更新
-    checkUpdate() {
-      uni.showLoading({ title: '检查中...' })
-      
-      // 模拟网络请求
-      setTimeout(() => {
-        uni.hideLoading()
-        uni.showModal({
-          title: '提示',
-          content: '当前已是最新版本',
-          showCancel: false
-        })
-      }, 1000)
-    },
-    
-    // 显示用户协议
-    showAgreement() {
-      uni.navigateTo({
-        url: '/pages/webview?url=' + encodeURIComponent('https://yourdomain.com/agreement')
-      })
-    },
-    
-    // 显示隐私政策
-    showPrivacy() {
-      uni.navigateTo({
-        url: '/pages/webview?url=' + encodeURIComponent('https://yourdomain.com/privacy')
-      })
-    },
-    
-    // 退出登录
+
     logout() {
       uni.showModal({
-        title: '提示',
-        content: '确定要退出登录吗？',
+        title: '确认退出',
+        content: '确定要退出当前账号吗？',
         success: (res) => {
           if (res.confirm) {
-            // 清除用户信息和token
-            uni.removeStorageSync('token')
-            uni.removeStorageSync('userInfo')
-            
-            // 跳转到登录页面
-            uni.redirectTo({
-              url: '/pages/auth/login'
-            })
+            uni.reLaunch({ url: '/pages/login/login' })
           }
         }
       })
@@ -200,24 +133,6 @@ export default {
   min-height: 100vh;
   background-color: #f5f5f5;
   padding-bottom: 100rpx;
-  
-  .nav-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20rpx 30rpx;
-    background-color: #fff;
-    border-bottom: 1rpx solid #f0f0f0;
-    
-    .title {
-      font-size: 36rpx;
-      font-weight: bold;
-    }
-    
-    .right-placeholder {
-      width: 40rpx;
-    }
-  }
   
   .settings-list {
     background-color: #fff;
@@ -252,10 +167,9 @@ export default {
         display: flex;
         align-items: center;
         
-        .cache-size, .version {
-          font-size: 26rpx;
-          color: #999;
-          margin-right: 10rpx;
+        .permission-switch {
+          transform: scale(0.85);
+          transform-origin: right center;
         }
       }
       

@@ -127,35 +127,30 @@ const platformAdapter = {
 async function requestWithRetry(params, retry = GLOBAL_CONFIG.retryCount) {
   for (let i = 0; i <= retry; i++) {
     try {
-      const res = await uni.request(params);
+      // 统一使用 try-catch 处理所有平台
+      const response = await uni.request(params);
       
-      // 处理微信小程序的数组响应
-      if (Array.isArray(res)) {
-        const [error, successRes] = res;
+      // 微信小程序返回的是数组 [error, res]，需要特殊处理
+      if (Array.isArray(response)) {
+        const [error, res] = response;
         if (error) throw error;
-        return {
-          statusCode: successRes.statusCode,
-          data: successRes.data,
-          headers: successRes.header || {}
+        return { 
+          statusCode: res.statusCode,
+          data: res.data,
+          headers: res.header 
         };
       }
       
-      // 处理其他平台的响应
+      // H5及其他平台直接返回对象
       return {
-        statusCode: res.statusCode || res.status,
-        data: res.data,
-        headers: res.header || res.headers || {}
+        statusCode: response.statusCode || 200,
+        data: response.data,
+        headers: response.headers || {}
       };
     } catch (error) {
-      if (i === retry) {
-        throw Object.assign(error, { 
-          requestUrl: params.url,
-          retryCount: i + 1 
-        });
-      }
+      if (i === retry) throw error;
     }
   }
-  throw new Error(`请求失败: 超过最大重试次数 (${retry})`);
 }
 
 /**
@@ -197,7 +192,7 @@ function responseInterceptor(response) {
     case statusCode >= 400:
       throw new Error(`客户端错误 (${statusCode})`);
     case statusCode === 200:
-      return data; // 正常返回数据
+      return response.data; // 正常返回数据
     default:
       throw new Error(`未知状态码: ${statusCode}`);
   }
