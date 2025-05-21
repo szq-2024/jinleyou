@@ -17,17 +17,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
 app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
-app.use('/public', (req, res, next) => {
-    express.static('public')(req, res, err => {
-        if (err) {
-            console.error('Static file error:', req.path);
-            res.status(404).json({ code: 404, msg: 'Resource not found' });
-        }
-    });
-});
+app.use('/public', express.static('public'));
 app.use(cors({
     origin: process.env.NODE_ENV === 'production'
-        ? ['https://yulfruszsnxe.sealoshzh.site', 'https://zkfonnqmwith.sealoshzh.site']
+        ? 'http://43.143.218.51'
         : ['http://localhost:3000', 'http://localhost:8080'],
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'], // [!code focus]
