@@ -1,5 +1,4 @@
 import App from './App'
-import './mock/mock.js'
 import dayjs from 'dayjs'
 import isSameOrAfter from 'dayjs/plugin/isSameOrAfter'
 
@@ -8,8 +7,6 @@ dayjs.extend(isSameOrAfter) // 扩展插件
 import Vue from 'vue'
 import uviewPlus from 'uview-plus'
 import './uni.promisify.adaptor'
-import api from './api'
-import store from './store';
 
 
 Vue.prototype.$api = api
@@ -24,8 +21,7 @@ app.$mount()
 
 // #ifdef VUE3
 import { createSSRApp } from 'vue'
-import store from './store/index.js'
-
+import store from '@/store/index'
 export function createApp() {
   const app = createSSRApp(App)
   app.use(store)

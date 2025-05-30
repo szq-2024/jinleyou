@@ -19,7 +19,7 @@
       </view>
 
       <!-- 权限管理 -->
-      <view class="section-title">权限管理</view>
+      <!--<view class="section-title">权限管理</view>
       <view class="setting-item">
         <view class="item-left">
           <uni-icons type="location" size="20" color="#666" />
@@ -33,7 +33,7 @@
             class="permission-switch"
           />
         </view>
-      </view>
+      </view>-->
     </view>
 
     <!-- 退出登录 -->

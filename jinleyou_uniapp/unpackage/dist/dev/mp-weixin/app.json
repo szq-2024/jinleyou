@@ -8,7 +8,6 @@
     "pages/partner/create-plans",
     "pages/partner/create-guides",
     "pages/chat/chat",
-    "pages/guide/guide",
     "pages/my/my",
     "pages/scenic/scenic",
     "pages/review/review",
@@ -43,12 +42,6 @@
         "iconPath": "static/tabBar/partner01.png",
         "selectedIconPath": "static/tabBar/partner.png",
         "text": "找同伴"
-      },
-      {
-        "pagePath": "pages/guide/guide",
-        "iconPath": "static/tabBar/guide01.png",
-        "selectedIconPath": "static/tabBar/guide.png",
-        "text": "应急导航"
       },
       {
         "pagePath": "pages/my/my",

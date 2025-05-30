@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
 const common_vendor = require("./common/vendor.js");
-require("./mock/mock.js");
+const api_auth = require("./api/auth.js");
 const store_index = require("./store/index.js");
 if (!Math) {
   "./pages/login/login.js";
@@ -12,7 +12,6 @@ if (!Math) {
   "./pages/partner/create-plans.js";
   "./pages/partner/create-guides.js";
   "./pages/chat/chat.js";
-  "./pages/guide/guide.js";
   "./pages/my/my.js";
   "./pages/scenic/scenic.js";
   "./pages/review/review.js";
@@ -26,22 +25,25 @@ if (!Math) {
 }
 const _sfc_main = {
   onLaunch: function() {
-    common_vendor.index.__f__("log", "at App.vue:9", "App Launch");
+    common_vendor.index.__f__("log", "at App.vue:7", "App Launch");
     const token = common_vendor.index.getStorageSync("token");
     if (token) {
-      store.dispatch("user/checkTokenValidity");
-    }
-    if (!token) {
+      const validToken = api_auth.checkTokenExpiration();
+      if (!validToken) {
+        common_vendor.index.removeStorageSync("token");
+        common_vendor.index.reLaunch({ url: "/pages/login/login" });
+      }
+    } else {
       common_vendor.index.reLaunch({
         url: "/pages/login/login"
       });
     }
   },
   onShow: function() {
-    common_vendor.index.__f__("log", "at App.vue:23", "App Show");
+    common_vendor.index.__f__("log", "at App.vue:26", "App Show");
   },
   onHide: function() {
-    common_vendor.index.__f__("log", "at App.vue:26", "App Hide");
+    common_vendor.index.__f__("log", "at App.vue:29", "App Hide");
   }
 };
 common_vendor.dayjs.extend(common_vendor.isSameOrAfter);

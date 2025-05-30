@@ -105,15 +105,8 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
       color: "#ccc"
     }),
     e: common_vendor.o(($event) => $options.navigateTo("/pages/my/change_password")),
-    f: common_vendor.p({
-      type: "location",
-      size: "20",
-      color: "#666"
-    }),
-    g: $data.locationPermission === "authorized",
-    h: common_vendor.o((...args) => $options.handleSwitchChange && $options.handleSwitchChange(...args)),
-    i: common_vendor.o((...args) => $options.logout && $options.logout(...args)),
-    j: common_vendor.gei(_ctx, "")
+    f: common_vendor.o((...args) => $options.logout && $options.logout(...args)),
+    g: common_vendor.gei(_ctx, "")
   };
 }
 const MiniProgramPage = /* @__PURE__ */ common_vendor._export_sfc(_sfc_main, [["render", _sfc_render], ["__scopeId", "data-v-5fad43a3"]]);

@@ -1,79 +1,51 @@
 <template>
-  <view class="guide-page">
-    <!-- 顶部导航栏 -->
-    <uni-nav-bar 
-      title="应急导航" 
-      :border="false" 
-      fixed
-    />
-    
-    <!-- 地图容器 -->
-    <map 
-      id="emergencyMap"
-      class="map-container"
-      :latitude="latitude"
-      :longitude="longitude"
-      :markers="markers"
-      :polyline="polyline"
+  <view class="container">
+    <!-- 地图组件 -->
+    <map
+      id="myMap"
+      longitude="{{longitude}}"
+      latitude="{{latitude}}"
+      markers="{{markers}}"
       show-location
-      @markertap="handleMarkerTap"
+      style="width: 100%; height: 100vh;"
+      bindmarkertap="onMarkerTap"
     ></map>
-    
-    <!-- 功能按钮组 -->
-    <view class="action-buttons">
-      <button class="locate-btn" @click="getLocation">
-        <uni-icons type="location-filled" size="20" color="#fff" />
+  
+    <!-- 操作按钮 -->
+    <view class="btn-group">
+      <button class="location-btn" bindtap="moveToLocation">
+        <image src="/images/location.png" class="icon"/>
       </button>
       
-      <button class="toilet-btn" @click="searchNearbyToilets">
-        <uni-icons type="staff" size="20" color="#fff" />
-        <text>附近厕所</text>
-      </button>
-      
-      <button class="hospital-btn" @click="searchNearbyHospitals">
-        <uni-icons type="medal" size="20" color="#fff" />
-        <text>医疗点</text>
+      <button class="search-btn" bindtap="showSearchPanel">
+        <image src="/images/search.png" class="icon"/>
       </button>
     </view>
-    
-    <!-- 地点列表抽屉 -->
-    <uni-drawer 
-      :visible="drawerVisible" 
-      mode="right" 
-      @close="closeDrawer"
-    >
-      <view class="drawer-content">
-        <view class="drawer-header">
-          <text class="title">{{ drawerTitle }}</text>
-          <uni-icons 
-            type="close" 
-            size="24" 
-            color="#999" 
-            @click="closeDrawer"
-          />
-        </view>
-        
-        <scroll-view scroll-y class="place-list">
-          <view 
-            v-for="(item, index) in placeList" 
-            :key="index" 
-            class="place-item"
-            @click="navigateToPlace(item)"
-          >
-            <view class="place-info">
-              <text class="name">{{ item.name }}</text>
-              <text class="address">{{ item.address }}</text>
-              <text class="distance">{{ item.distance }}米</text>
-            </view>
-            <uni-icons type="arrowright" size="18" color="#999" />
-          </view>
-          
-          <view v-if="placeList.length === 0" class="empty-tip">
-            附近没有找到相关地点
-          </view>
-        </scroll-view>
+  
+    <!-- 搜索面板 -->
+    <view class="search-panel {{panelShow ? 'show' : ''}}">
+      <view class="search-header">
+        <input 
+          placeholder="搜索应急地点" 
+          bindinput="onSearchInput"
+          value="{{searchKeyword}}"
+        />
+        <button bindtap="hideSearchPanel">取消</button>
       </view>
-    </uni-drawer>
+      
+      <scroll-view scroll-y class="result-list">
+        <view 
+          wx:for="{{searchResults}}" 
+          wx:key="id"
+          class="result-item"
+          bindtap="onResultTap"
+          data-item="{{item}}"
+        >
+          <text class="title">{{item.title}}</text>
+          <text class="address">{{item.address}}</text>
+        </view>
+      </scroll-view>
+    </view>
   </view>
 </template>
 
@@ -82,52 +54,47 @@ import QQMapWX from 'qqmap-wx-jssdk';
 
 export default {
   data() {
-      return {
-		mapKeys: {
-		    location: '6P6BZ-O46CZ-7C3XU-7CDUI-TXUFT-ASFGC',  // 定位专用
-		    toilet: 'ZH7BZ-4P5KQ-MPQ5T-42FXT-MSBH6-XIFDE',      // 厕所搜索
-		    hospital: 'VUABZ-5W7K7-SXUXE-HRZ3W-QKU3T-WZFRG'  // 医院搜索
-		},
-        latitude: 39.136803,
-        longitude: 117.107382,
-        markers: [],
-        polyline: [],
-        drawerVisible: false,
-        drawerTitle: '',
-        placeList: [],
-        qqMap: null,
-        currentCategory: '' // 新增当前分类标识
-      }
+    return {
+      mapKey: '6P6BZ-O46CZ-7C3XU-7CDUI-TXUFT-ASFGC',
+      latitude: 39.136803,
+      longitude: 117.107382,
+      markers: [],
+      polyline: [],
+      drawerVisible: false,
+      drawerTitle: '',
+      placeList: [],
+      qqMap: null
+    }
+  },
+  
+  onLoad() {
+    this.initQqMapSDK()
+      .then(() => this.checkLocationAuth())
+      .catch(err => {
+        console.error('初始化失败:', err);
+        uni.showModal({
+          title: '地图服务异常',
+          content: '无法加载地图功能，请检查网络或重启应用',
+          showCancel: false
+        });
+      });
+  },
+
+  methods: {
+    // 初始化腾讯地图SDK
+    initQqMapSDK() {
+      return new Promise((resolve, reject) => {
+        try {
+          this.qqMap = new QQMapWX({ key: this.mapKey });
+          console.log('腾讯地图初始化成功');
+          resolve();
+        } catch (e) {
+          console.error('腾讯地图初始化失败:', e);
+          reject(e);
+        }
+      });
     },
-	onLoad() {
-	    this.initQqMapSDK()
-	      .then(() => this.checkLocationAuth())
-	      .catch(err => {
-	        console.error('初始化失败:', err);
-	        uni.showModal({
-	          title: '地图服务异常',
-	          content: '无法加载地图功能，请检查网络或重启应用',
-	          showCancel: false
-	        });
-	      });
-	  },
-	methods: {
-		// 初始化腾讯地图SDK
-		initQqMapSDK() {
-		      return new Promise((resolve, reject) => {
-		        try {
-		          this.qqMap = new QQMapWX({
-		            key: '6P6BZ-O46CZ-7C3XU-7CDUI-TXUFT-ASFGC' // 请替换为实际key
-		          });
-		          console.log('腾讯地图初始化成功');
-		          resolve();
-		        } catch (e) {
-		          console.error('腾讯地图初始化失败:', e);
-		          reject(e);
-		        }
-		      });
-		},
-    
+
     // 检查定位权限
     async checkLocationAuth() {
       try {
@@ -139,10 +106,10 @@ export default {
         }
       } catch (error) {
         console.error('检查权限异常:', error);
-        this.getLocation(); // 降级处理
+        this.getLocation();
       }
     },
-    
+
     // 打开设置页
     openSetting() {
       uni.showModal({
@@ -151,40 +118,38 @@ export default {
         confirmText: '去设置',
         success: (res) => {
           if (res.confirm) {
-            // 跳转到应用内设置页面
             uni.navigateTo({
-              url: '/pages/my/setting' // 确保路径正确
+              url: '/pages/my/setting'
             });
           }
         }
       });
     },
-    
+
     // 获取当前位置
     async getLocation() {
-          try {
-            uni.showLoading({ title: '定位中...', mask: true });
-            const locationMap = new QQMapWX({ key: this.mapKeys.location });
-            const res = await uni.getLocation({
-              type: 'gcj02', // 腾讯地图使用GCJ-02坐标系
-              isHighAccuracy: true
-            });
-            
-            this.latitude = res.latitude;
-            this.longitude = res.longitude;
-            this.addMyLocationMarker();
-            
-          } catch (err) {
-            console.error('定位失败:', err);
-            uni.showToast({
-              title: '定位失败，已使用默认位置',
-              icon: 'none'
-            });
-          } finally {
-            uni.hideLoading();
-          }
+      try {
+        uni.showLoading({ title: '定位中...', mask: true });
+        const res = await uni.getLocation({
+          type: 'gcj02',
+          isHighAccuracy: true
+        });
+        
+        this.latitude = res.latitude;
+        this.longitude = res.longitude;
+        this.addMyLocationMarker();
+        
+      } catch (err) {
+        console.error('定位失败:', err);
+        uni.showToast({
+          title: '定位失败，已使用默认位置',
+          icon: 'none'
+        });
+      } finally {
+        uni.hideLoading();
+      }
     },
-    
+
     // 添加当前位置标记
     addMyLocationMarker() {
       this.markers = [{
@@ -198,13 +163,13 @@ export default {
         zIndex: 99
       }];
     },
-    
+
     // 搜索附近厕所
     searchNearbyToilets() {
-      const toiletMap = new QQMapWX({ key: this.mapKeys.toilet });
-      toiletMap.search({
+      this.qqMap.search({
         keyword: '厕所',
         location: {
+			 type: 'gcj02',
           latitude: this.latitude,
           longitude: this.longitude
         },
@@ -220,13 +185,12 @@ export default {
       });
     },
 
-    
     // 搜索附近医疗点
     searchNearbyHospitals() {
-      const hospitalMap = new QQMapWX({ key: this.mapKeys.hospital });
-      hospitalMap.search({
+      this.qqMap.search({
         keyword: '医院',
         location: {
+			 type: 'gcj02',
           latitude: this.latitude,
           longitude: this.longitude
         },
@@ -241,38 +205,58 @@ export default {
         }
       });
     },
-	 // 处理搜索结果
-	processSearchResult(data, category) {
-	  this.placeList = data.map(item => ({
-	    id: item.id,
-	    name: item.title,
-	    address: item.address,
-	    latitude: item.location.lat,
-	    longitude: item.location.lng,
-	    distance: item._distance || '未知'
-	  }));
-	  this.showPlaceMarkers(category);
+	searchNearbyToilets() {
+	  console.log('当前密钥:', this.mapKey)
+	  console.log('搜索坐标:', this.latitude, this.longitude)
+	  
+	  this.qqMap.search({
+	    keyword: '厕所',
+	    location: { latitude: this.latitude, longitude: this.longitude },
+	    success: (res) => {
+	      console.log('原始响应:', JSON.parse(JSON.stringify(res)))
+	    },
+	    fail: (err) => {
+	      console.error('完整错误对象:', err)
+	      uni.showToast({ 
+	        title: `错误码: ${err.status} 信息: ${err.message}`,
+	        icon: 'none'
+	      })
+	    }
+	  })
 	},
+    // 处理搜索结果
+    processSearchResult(data, category) {
+      this.placeList = data.map(item => ({
+        id: item.id,
+        name: item.title,
+        address: item.address,
+        latitude: item.location.lat,
+        longitude: item.location.lng,
+        distance: item._distance || '未知'
+      }));
+      this.showPlaceMarkers(category);
+    },
+
     // 显示地点标记
     showPlaceMarkers(category) {
-        const iconPath = category === 'hospital' 
-          ? '/static/hospital-marker.png' 
-          : '/static/marker.png';
-        
-        const placeMarkers = this.placeList.map((item, index) => ({
-          id: index + 1,
-          latitude: item.latitude,
-          longitude: item.longitude,
-          iconPath: iconPath,
-          width: 24,
-          height: 24,
-          title: item.name,
-          zIndex: 9
-        }));
-        
-        this.markers = [...this.markers, ...placeMarkers];
+      const iconPath = category === 'hospital' 
+        ? '/static/hospital-marker.png' 
+        : '/static/marker.png';
+      
+      const placeMarkers = this.placeList.map((item, index) => ({
+        id: index + 1,
+        latitude: item.latitude,
+        longitude: item.longitude,
+        iconPath: iconPath,
+        width: 24,
+        height: 24,
+        title: item.name,
+        zIndex: 9
+      }));
+      
+      this.markers = [...this.markers, ...placeMarkers];
     },
-    
+
     // 导航到指定地点
     navigateToPlace(place) {
       uni.openLocation({
@@ -288,7 +272,7 @@ export default {
       });
       this.closeDrawer();
     },
-    
+
     // 关闭抽屉
     closeDrawer() {
       this.drawerVisible = false;

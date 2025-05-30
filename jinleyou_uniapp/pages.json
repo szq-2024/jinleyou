@@ -47,13 +47,13 @@
 				"navigationBarTitleText" : "聊天"
 			}
 		},
-		{
+		/*{
 			"path" : "pages/guide/guide",
 			"style" : 
 			{
 				"navigationBarTitleText" : "应急导航"
 			}
-		},
+		},*/
 		{
 			"path": "pages/my/my",
 			"style": {
@@ -123,12 +123,12 @@
 				"selectedIconPath": "static/tabBar/partner.png",
 				"text": "找同伴"
 			},
-			{
+			/*{
 				"pagePath": "pages/guide/guide",
 				"iconPath": "static/tabBar/guide01.png",
 				"selectedIconPath": "static/tabBar/guide.png",
 				"text": "应急导航"
-			},
+			},*/
 			{
 				"pagePath": "pages/my/my",
 				"iconPath": "static/tabBar/my01.png",
